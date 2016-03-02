@@ -14,7 +14,6 @@
 #'
 #' @param channel The channel to listen for cran package installation messages. Defaults
 #'   to \code{cranPackage}.
-#' @param
 
 .cranPackageChannel <- function(channel = "cranPackage") {
     callback <- function(message) {
