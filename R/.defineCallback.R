@@ -7,8 +7,9 @@
 #'
 #' @param channelDef A list containing \code{channel} and \code{callback}, returned
 #'   from a channel definition function.
+#' @param envir An environment object
 
-.defineCallback <- function(channelDef) {
-    #TODO: find correct environment for assignment; keep in mind this will hopefully be in an apply
-    assign(channelDef$channel, channelDef$callback)
+.defineCallback <- function(channelDef, envir) {
+    #TODO: test to see if this method of passing an environment solves the likely problem
+    assign(channelDef$channel, channelDef$callback, envir = envir)
 }
