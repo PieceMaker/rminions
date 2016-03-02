@@ -13,7 +13,7 @@
 #'
 #' @export
 #'
-#' @param channel The channel to listen for git package installation messages. Defulats
+#' @param channel The channel to listen for git package installation messages. Defaults
 #'   to \code{gitPackage}.
 
 .gitPackageChannel <- function(channel = "gitPackage") {
