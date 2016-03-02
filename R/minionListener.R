@@ -23,8 +23,32 @@
 #'
 #' @param host The name or ip address of the redis server.
 #' @param port The port the redis server is running on.
-#'
+#' @param channels A list of functions defining channels to subscribe to with
+#'   corresponding callbacks.
+#' @param logging A boolean to enable or disable logging to a file on the system. Defaults
+#'   to \code{true}.
+#' @param logFileDir A string giving the directory to store worker log files if logging is
+#'   enabled.
 
-minionListener <- function(host, port, channels) {
+minionListener <- function(host, port, channels, logging = T, logFileDir = "/var/log/R") {
+    currentEnvironment <- environment()
 
+    listenerHost <- as.character(System$getHostname())
+    listenerID <- paste0(host, '-listener-', Sys.getpid())
+    if(logging) {
+        logFilePath <- paste0(logFileDir, listenerID, '.log')
+        logFile <- file(logFilePath, open = 'a')
+        sink(logFile, type = 'message')
+    }
+
+    conn <- redisConnect(host = host, port = port, returnRef = T)
+
+    # Define the callbacks
+    channelNames <- laply(.data = channels, .fun = .defineCallback, envir = currentEnvironment)
+
+    redisSubscribe(channelNames)
+
+    while(1) {
+        redisMonitorChannels()
+    }
 }
