@@ -1,0 +1,1 @@
+#' A function that defines a channel and handles messages for unsubscribing from a channel.
