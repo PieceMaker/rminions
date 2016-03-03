@@ -68,8 +68,10 @@ minionWorker <- function(host, port, jobsQueue = "jobsqueue", logging = T, logFi
         errorQueue <- job$ErrorQueue
 
         tryCatch(
-            results <- func(params)
-            redisRPush(resultsQueue, results),
+            {
+                results <- func(params)
+                redisRPush(resultsQueue, results)
+            },
             error = function(e) {
                 redisRPush(errorQueue, e)
             },
