@@ -1,2 +1,6 @@
 # Webstorm project files
 .idea/
+
+# R session and project files
+.Rproj.user
+.Rhistory
