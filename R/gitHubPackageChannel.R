@@ -1,11 +1,11 @@
 #' A function that defines a channel and handles messages for installing GitHub packages.
 #'
-#' \code{.gitHubPackageChannel} is a function that should be passed to
+#' \code{gitHubPackageChannel} is a function that should be passed to
 #' \code{minionListener} whenever you want to add a listener and handler for installing
 #' packages from a GitHub repository. It tells the listener what channel to listen on and
 #' defines a callback for handling any messages on this channel.
 #'
-#' The handler for \code{.gitPackageChannel} expects package installation messages to be
+#' The handler for \code{gitHubPackageChannel} expects package installation messages to be
 #' lists with one required key and two optional keys. The required key is \code{repo},
 #' and the optional keys are \code{subdir} and \code{username}. For more information on
 #' these values, see the documentation for \code{install_github} from the \code{devtools}
@@ -16,7 +16,7 @@
 #' @param channel The channel to listen for git package installation messages. Defaults
 #'   to \code{gitHubPackage}.
 
-.gitHubPackageChannel <- function(channel = "gitHubPackage") {
+gitHubPackageChannel <- function(channel = "gitHubPackage") {
     callback <- function(message) {
         install_github(
             repo = message$repo,

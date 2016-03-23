@@ -1,7 +1,7 @@
 #' An internal function that takes a channel definition and creates the callback.
 #'
 #' The \code{redisSubscribe} function expects callbacks to a function with the same
-#' name as the subscribed channel. \code{.defineCallback} takes the callback
+#' name as the subscribed channel. \code{defineCallback} takes the callback
 #' returned from a channel definition and assigns it to the correct function name
 #' so \code{redisSubscribe} can access it.
 #'
@@ -10,7 +10,7 @@
 #' @param envir An environment object.
 #' @return The name of the channel to listen on.
 
-.defineCallback <- function(channelDef, envir) {
+defineCallback <- function(channelDef, envir) {
     #TODO: test to see if this method of passing an environment solves the likely problem
     assign(channelDef$channel, channelDef$callback, envir = envir)
     return(channelDef$channel)
