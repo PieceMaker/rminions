@@ -1,1 +1,0 @@
-#' A function that defines a channel and handles messages for subscribing to a channel.
