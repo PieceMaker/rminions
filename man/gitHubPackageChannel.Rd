@@ -4,11 +4,15 @@
 \alias{gitHubPackageChannel}
 \title{A function that defines a channel and handles messages for installing GitHub packages.}
 \usage{
-gitHubPackageChannel(channel = "gitHubPackage")
+gitHubPackageChannel(channel = "gitHubPackage",
+  errorChannel = "listenerErrors")
 }
 \arguments{
 \item{channel}{The channel to listen for git package installation messages. Defaults
 to \code{gitHubPackage}.}
+
+\item{errorChannel}{The channel to publish errors on if/when they occur. Defaults to
+\code{listenerErrors}.}
 }
 \description{
 \code{gitHubPackageChannel} is a function that should be passed to

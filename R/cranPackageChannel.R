@@ -16,19 +16,25 @@
 #'
 #' @param channel The channel to listen for cran package installation messages. Defaults
 #'   to \code{cranPackage}.
+#' @param errorChannel The channel to publish errors on if/when they occur. Defaults to
+#'   \code{listenerErrors}.
 
-cranPackageChannel <- function(channel = "cranPackage") {
+cranPackageChannel <- function(channel = "cranPackage", errorChannel = "listenerErrors") {
     callback <- function(message) {
         #Message must be passed in as JSON from jsonlite
         message <- unserializeJSON(message)
-        if(is.null(message$errorQueue)) {
-            message$errorQueue <- paste0(channel, 'ChannelErrors')
-        }
         listenerHost <- as.character(System$getHostname())
         tryCatch(
             install.packages(message$packageName),
             error = function(e) {
-                redisRPush(message$errorQueue, e)
+                e <- sprintf("An error occurred processing job on channel '%s' on listener for server '%s': %s",
+                    channel,
+                    listenerHost,
+                    e
+                )
+                redisSetContext(outputConn)
+                redisPublish(errorChannel, e)
+                redisSetContext(subscribeConn)
             }
         )
     }

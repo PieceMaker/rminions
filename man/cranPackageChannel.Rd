@@ -4,11 +4,14 @@
 \alias{cranPackageChannel}
 \title{A function that defines a channel and handles messages for installing CRAN packages.}
 \usage{
-cranPackageChannel(channel = "cranPackage")
+cranPackageChannel(channel = "cranPackage", errorChannel = "listenerErrors")
 }
 \arguments{
 \item{channel}{The channel to listen for cran package installation messages. Defaults
 to \code{cranPackage}.}
+
+\item{errorChannel}{The channel to publish errors on if/when they occur. Defaults to
+\code{listenerErrors}.}
 }
 \description{
 \code{cranPackageChannel} is a function that should be passed to \code{minionListener}

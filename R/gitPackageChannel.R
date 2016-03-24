@@ -17,14 +17,13 @@
 #'
 #' @param channel The channel to listen for git package installation messages. Defaults
 #'   to \code{gitPackage}.
+#' @param errorChannel The channel to publish errors on if/when they occur. Defaults to
+#'   \code{listenerErrors}.
 
-gitPackageChannel <- function(channel = "gitPackage") {
+gitPackageChannel <- function(channel = "gitPackage", errorChannel = "listenerErrors") {
     callback <- function(message) {
         #Message must be passed in as JSON from jsonlite
         message <- unserializeJSON(message)
-        if(is.null(message$errorQueue)) {
-            message$errorQueue <- paste0(channel, 'ChannelErrors')
-        }
         listenerHost <- as.character(System$getHostname())
         tryCatch(
             install_git(
@@ -33,7 +32,14 @@ gitPackageChannel <- function(channel = "gitPackage") {
                 branch = message$branch
             ),
             error = function(e) {
-                redisRPush(message$errorQueue, e)
+                e <- sprintf("An error occurred processing job on channel '%s' on listener for server '%s': %s",
+                    channel,
+                    listenerHost,
+                    e
+                )
+                redisSetContext(outputConn)
+                redisPublish(errorChannel, e)
+                redisSetContext(subscribeConn)
             }
         )
     }

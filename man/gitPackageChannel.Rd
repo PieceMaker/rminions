@@ -4,11 +4,14 @@
 \alias{gitPackageChannel}
 \title{A function that defines a channel and handles messages for installing Git packages.}
 \usage{
-gitPackageChannel(channel = "gitPackage")
+gitPackageChannel(channel = "gitPackage", errorChannel = "listenerErrors")
 }
 \arguments{
 \item{channel}{The channel to listen for git package installation messages. Defaults
 to \code{gitPackage}.}
+
+\item{errorChannel}{The channel to publish errors on if/when they occur. Defaults to
+\code{listenerErrors}.}
 }
 \description{
 \code{gitPackageChannel} is a function that should be passed to \code{minionListener}

@@ -48,7 +48,11 @@ minionListener <- function(host, channels, port = 6379, logging = T, logFileDir 
         sink(logFile, type = 'message')
     }
 
-    redisConnect(host = host, port = port)
+    # Redis needs two connections. One for subscribing and one for publishing, popping, and pushing.
+    # Save their references globally so they can be easily accessed anywhere
+    # TODO: Try to find a way to pass references around so they do not have to be in global variables
+    outputConn <<- redisConnect(host = host, port = port, returnRef = T)
+    subscribeConn <<- redisConnect(host = host, port = port, returnRef = T)
 
     # Define the callbacks
     channelNames <- defineChannels(channels, globalEnvironment)
@@ -56,7 +60,7 @@ minionListener <- function(host, channels, port = 6379, logging = T, logFileDir 
     redisSubscribe(channelNames)
 
     while(1) {
-        #TODO: Explore why the error is not being suppressed inside the callback
+        # TODO: Explore why the error is not being suppressed inside the callback
         try(redisMonitorChannels())
     }
 }
