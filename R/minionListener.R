@@ -24,15 +24,15 @@
 #' @import plyr rredis R.utils
 #'
 #' @param host The name or ip address of the redis server.
-#' @param port The port the redis server is running on.
 #' @param channels A list of functions defining channels to subscribe to with
 #'   corresponding callbacks.
+#' @param port The port the redis server is running on. Defaults to 6379.
 #' @param logging A boolean to enable or disable logging to a file on the system. Defaults
 #'   to \code{true}.
 #' @param logFileDir A string giving the directory to store worker log files if logging is
 #'   enabled.
 
-minionListener <- function(host, port, channels, logging = T, logFileDir = "/var/log/R/") {
+minionListener <- function(host, channels, port = 6379, logging = T, logFileDir = "/var/log/R/") {
     currentEnvironment <- environment()
 
     listenerHost <- as.character(System$getHostname())
