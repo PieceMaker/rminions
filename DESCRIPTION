@@ -10,6 +10,7 @@ Description: This package provides generic functions to allow easy setup of work
 Depends:
     R (>= 3.2.3)
 Imports:
+    plyr (>= 1.8.3),
     rredis (>= 1.7.0),
     R.utils (>= 2.2.0)
 License: GPL-2
