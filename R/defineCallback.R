@@ -5,6 +5,8 @@
 #' returned from a channel definition and assigns it to the correct function name
 #' so \code{redisSubscribe} can access it.
 #'
+#' @export
+#'
 #' @param channelDef A list containing \code{channel} and \code{callback}, returned
 #'   from a channel definition function.
 #' @param envir An environment object.
