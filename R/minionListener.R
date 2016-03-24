@@ -51,7 +51,7 @@ minionListener <- function(host, channels, port = 6379, logging = T, logFileDir 
     redisConnect(host = host, port = port)
 
     # Define the callbacks
-    channelNames <- laply(.data = channels, .fun = defineCallback, envir = globalEnvironment)
+    channelNames <- defineChannels(channels, globalEnvironment)
 
     redisSubscribe(channelNames)
 
