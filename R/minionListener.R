@@ -43,7 +43,7 @@ minionListener <- function(host, port, channels, logging = T, logFileDir = "/var
         sink(logFile, type = 'message')
     }
 
-    conn <- redisConnect(host = host, port = port, returnRef = T)
+    redisConnect(host = host, port = port)
 
     # Define the callbacks
     channelNames <- laply(.data = channels, .fun = defineCallback, envir = currentEnvironment)
