@@ -2,6 +2,7 @@
 
 export(cranPackageChannel)
 export(defineCallback)
+export(defineChannels)
 export(gitHubPackageChannel)
 export(gitPackageChannel)
 export(minionListener)
