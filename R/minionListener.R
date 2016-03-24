@@ -19,6 +19,11 @@
 #' Since each listener receives all messages on the subscribed channel, only one
 #' listener needs to be run on each server.
 #'
+#' Note that this function makes use of the global environment when defining
+#' callbacks. After testing, it appears this is the only way to successfully monitor
+#' the PUB/SUB channels. Since the only purpose of this function is to monitor, this
+#' should not cause any issues.
+#'
 #' @export
 #'
 #' @import plyr rredis R.utils
@@ -33,7 +38,7 @@
 #'   enabled.
 
 minionListener <- function(host, channels, port = 6379, logging = T, logFileDir = "/var/log/R/") {
-    currentEnvironment <- environment()
+    globalEnvironment <- globalenv()
 
     listenerHost <- as.character(System$getHostname())
     listenerID <- paste0(host, '-listener-', Sys.getpid())
@@ -46,7 +51,7 @@ minionListener <- function(host, channels, port = 6379, logging = T, logFileDir 
     redisConnect(host = host, port = port)
 
     # Define the callbacks
-    channelNames <- laply(.data = channels, .fun = defineCallback, envir = currentEnvironment)
+    channelNames <- laply(.data = channels, .fun = defineCallback, envir = globalEnvironment)
 
     redisSubscribe(channelNames)
 
