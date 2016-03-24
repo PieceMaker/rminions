@@ -4,16 +4,16 @@
 \alias{minionListener}
 \title{A function that subscribes to a channel and performs various server-wide R tasks.}
 \usage{
-minionListener(host, port, channels, logging = T,
+minionListener(host, channels, port = 6379, logging = T,
   logFileDir = "/var/log/R/")
 }
 \arguments{
 \item{host}{The name or ip address of the redis server.}
 
-\item{port}{The port the redis server is running on.}
-
 \item{channels}{A list of functions defining channels to subscribe to with
 corresponding callbacks.}
+
+\item{port}{The port the redis server is running on. Defaults to 6379.}
 
 \item{logging}{A boolean to enable or disable logging to a file on the system. Defaults
 to \code{true}.}
@@ -41,5 +41,10 @@ processing time between publishing messages.
 
 Since each listener receives all messages on the subscribed channel, only one
 listener needs to be run on each server.
+
+Note that this function makes use of the global environment when defining
+callbacks. After testing, it appears this is the only way to successfully monitor
+the PUB/SUB channels. Since the only purpose of this function is to monitor, this
+should not cause any issues.
 }
 
