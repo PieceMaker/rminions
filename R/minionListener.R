@@ -56,6 +56,7 @@ minionListener <- function(host, channels, port = 6379, logging = T, logFileDir 
     redisSubscribe(channelNames)
 
     while(1) {
+        #TODO: Explore why the error is not being suppressed inside the callback
         try(redisMonitorChannels())
     }
 }
