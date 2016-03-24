@@ -36,6 +36,8 @@
 #'
 #' @export
 #'
+#' @import rredis R.utils
+#'
 #' @param host The name or ip address of the redis server.
 #' @param port The port the redis server is running on.
 #' @param jobsQueue A string giving the name of the queue where jobs will be placed.

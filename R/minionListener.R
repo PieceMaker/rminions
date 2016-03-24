@@ -21,6 +21,8 @@
 #'
 #' @export
 #'
+#' @import rredis R.utils
+#'
 #' @param host The name or ip address of the redis server.
 #' @param port The port the redis server is running on.
 #' @param channels A list of functions defining channels to subscribe to with

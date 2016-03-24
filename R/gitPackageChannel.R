@@ -13,6 +13,8 @@
 #'
 #' @export
 #'
+#' @import devtools
+#'
 #' @param channel The channel to listen for git package installation messages. Defaults
 #'   to \code{gitPackage}.
 
