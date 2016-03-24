@@ -51,7 +51,7 @@ minionWorker <- function(host, port, jobsQueue = "jobsqueue", logging = T, logFi
     workerHost <- as.character(System$getHostname())
     workerID <- paste0(host, '-worker-', Sys.getpid())
     if(logging) {
-        logFilePath <- paste0(logFileDir, workerid, '.log')
+        logFilePath <- paste0(logFileDir, workerID, '.log')
         logFile <- file(logFilePath, open = 'a')
         sink(logFile, type = 'message')
     }
@@ -77,7 +77,7 @@ minionWorker <- function(host, port, jobsQueue = "jobsqueue", logging = T, logFi
             error = function(e) {
                 redisRPush(errorQueue, e)
             },
-            finally = redisDelete(workerid)
+            finally = redisDelete(workerID)
         )
     }
 }
