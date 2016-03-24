@@ -12,11 +12,15 @@
 #'
 #' @export
 #'
+#' @import jsonlite
+#'
 #' @param channel The channel to listen for cran package installation messages. Defaults
 #'   to \code{cranPackage}.
 
 cranPackageChannel <- function(channel = "cranPackage") {
     callback <- function(message) {
+        #Message must be passed in as JSON from jsonlite
+        message <- unserializeJSON(message)
         install.packages(message$packageName)
     }
     return(

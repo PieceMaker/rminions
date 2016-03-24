@@ -21,7 +21,7 @@
 #'
 #' @export
 #'
-#' @import rredis R.utils plyr
+#' @import plyr rredis R.utils
 #'
 #' @param host The name or ip address of the redis server.
 #' @param port The port the redis server is running on.

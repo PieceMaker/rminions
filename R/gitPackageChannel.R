@@ -13,13 +13,15 @@
 #'
 #' @export
 #'
-#' @import devtools
+#' @import devtools jsonlite
 #'
 #' @param channel The channel to listen for git package installation messages. Defaults
 #'   to \code{gitPackage}.
 
 gitPackageChannel <- function(channel = "gitPackage") {
     callback <- function(message) {
+        #Message must be passed in as JSON from jsonlite
+        message <- unserializeJSON(message)
         install_git(
             url = message$url,
             subdir = message$subdir,
