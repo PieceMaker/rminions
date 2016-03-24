@@ -4,7 +4,8 @@
 \alias{minionListener}
 \title{A function that subscribes to a channel and performs various server-wide R tasks.}
 \usage{
-minionListener(host, port, channels, logging = T, logFileDir = "/var/log/R")
+minionListener(host, port, channels, logging = T,
+  logFileDir = "/var/log/R/")
 }
 \arguments{
 \item{host}{The name or ip address of the redis server.}

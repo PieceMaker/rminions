@@ -8,8 +8,7 @@ Description: This package provides generic functions to allow easy setup of work
     Functions are provided to facilitate the quick and easy setup of new servers for fast
     scalability.
 Depends:
-    R (>= 3.2.3)
-Imports:
+    R (>= 3.2.3),
     plyr (>= 1.8.3),
     rredis (>= 1.7.0),
     R.utils (>= 2.2.0)
