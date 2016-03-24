@@ -32,7 +32,7 @@
 #' @param logFileDir A string giving the directory to store worker log files if logging is
 #'   enabled.
 
-minionListener <- function(host, port, channels, logging = T, logFileDir = "/var/log/R") {
+minionListener <- function(host, port, channels, logging = T, logFileDir = "/var/log/R/") {
     currentEnvironment <- environment()
 
     listenerHost <- as.character(System$getHostname())
