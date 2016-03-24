@@ -56,6 +56,6 @@ minionListener <- function(host, channels, port = 6379, logging = T, logFileDir 
     redisSubscribe(channelNames)
 
     while(1) {
-        redisMonitorChannels()
+        try(redisMonitorChannels())
     }
 }
