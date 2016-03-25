@@ -10,9 +10,9 @@
 #' of the package to be installed. The handler then takes this string and installs the
 #' package of that name from CRAN.
 #'
-#' @export
-#'
 #' @import jsonlite rredis R.utils
+#'
+#' @export
 #'
 #' @param channel The channel to listen for cran package installation messages. Defaults
 #'   to \code{cranPackage}.
@@ -22,8 +22,8 @@
 cranPackageChannel <- function(channel = "cranPackage", errorChannel = "listenerErrors") {
     callback <- function(message) {
         #Message must be passed in as JSON from jsonlite
-        message <- unserializeJSON(message)
-        listenerHost <- as.character(System$getHostname())
+        message <- jsonlite::unserializeJSON(message)
+        listenerHost <- as.character(R.utils::System$getHostname())
         tryCatch(
             install.packages(message$packageName),
             error = function(e) {
@@ -32,9 +32,9 @@ cranPackageChannel <- function(channel = "cranPackage", errorChannel = "listener
                     listenerHost,
                     e
                 )
-                redisSetContext(outputConn)
-                redisPublish(errorChannel, e)
-                redisSetContext(subscribeConn)
+                rredis::redisSetContext(outputConn)
+                rredis::redisPublish(errorChannel, e)
+                rredis::redisSetContext(subscribeConn)
             }
         )
     }

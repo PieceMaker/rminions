@@ -11,9 +11,9 @@
 #' these values, see the documentation for \code{install_github} from the \code{devtools}
 #' package.
 #'
-#' @export
-#'
 #' @import devtools jsonlite rredis R.utils
+#'
+#' @export
 #'
 #' @param channel The channel to listen for git package installation messages. Defaults
 #'   to \code{gitHubPackage}.
@@ -23,10 +23,10 @@
 gitHubPackageChannel <- function(channel = "gitHubPackage", errorChannel = "listenerErrors") {
     callback <- function(message) {
         #Message must be passed in as JSON from jsonlite
-        message <- unserializeJSON(message)
-        listenerHost <- as.character(System$getHostname())
+        message <- jsonlite::unserializeJSON(message)
+        listenerHost <- as.character(R.utils::System$getHostname())
         tryCatch(
-            install_github(
+            devtools::install_github(
                 repo = message$repo,
                 subdir = message$subdir,
                 username = message$username
@@ -37,9 +37,9 @@ gitHubPackageChannel <- function(channel = "gitHubPackage", errorChannel = "list
                     listenerHost,
                     e
                 )
-                redisSetContext(outputConn)
-                redisPublish(errorChannel, e)
-                redisSetContext(subscribeConn)
+                rredis::redisSetContext(outputConn)
+                rredis::redisPublish(errorChannel, e)
+                rredis::redisSetContext(subscribeConn)
             }
         )
     }

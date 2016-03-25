@@ -24,9 +24,9 @@
 #' the PUB/SUB channels. Since the only purpose of this function is to monitor, this
 #' should not cause any issues.
 #'
-#' @export
+#' @import rredis R.utils
 #'
-#' @import plyr rredis R.utils
+#' @export
 #'
 #' @param host The name or ip address of the redis server.
 #' @param channels A list of functions defining channels to subscribe to with
@@ -40,7 +40,7 @@
 minionListener <- function(host, channels, port = 6379, logging = T, logFileDir = "/var/log/R/") {
     globalEnvironment <- globalenv()
 
-    listenerHost <- as.character(System$getHostname())
+    listenerHost <- as.character(R.utils::System$getHostname())
     listenerID <- paste0(host, '-listener-', Sys.getpid())
     if(logging) {
         logFilePath <- paste0(logFileDir, listenerID, '.log')
@@ -51,16 +51,16 @@ minionListener <- function(host, channels, port = 6379, logging = T, logFileDir 
     # Redis needs two connections. One for subscribing and one for publishing, popping, and pushing.
     # Save their references globally so they can be easily accessed anywhere
     # TODO: Try to find a way to pass references around so they do not have to be in global variables
-    outputConn <<- redisConnect(host = host, port = port, returnRef = T)
-    subscribeConn <<- redisConnect(host = host, port = port, returnRef = T)
+    outputConn <<- redis::redisConnect(host = host, port = port, returnRef = T)
+    subscribeConn <<- redis::redisConnect(host = host, port = port, returnRef = T)
 
     # Define the callbacks
     channelNames <- defineChannels(channels, globalEnvironment)
 
-    redisSubscribe(channelNames)
+    redis::redisSubscribe(channelNames)
 
     while(1) {
         # TODO: Explore why the error is not being suppressed inside the callback
-        try(redisMonitorChannels())
+        try(redis::redisMonitorChannels())
     }
 }

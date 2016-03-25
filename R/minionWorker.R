@@ -34,9 +34,9 @@
 #' \code{ErrorQueue} will be a string with the name of the redis queue to store any errors
 #' thrown while running the job.
 #'
-#' @export
-#'
 #' @import rredis R.utils
+#'
+#' @export
 #'
 #' @param host The name or ip address of the redis server.
 #' @param port The port the redis server is running on.
@@ -48,7 +48,7 @@
 #'   enabled.
 
 minionWorker <- function(host, port, jobsQueue = "jobsqueue", logging = T, logFileDir = "/var/log/R/") {
-    workerHost <- as.character(System$getHostname())
+    workerHost <- as.character(R.utils::System$getHostname())
     workerID <- paste0(host, '-worker-', Sys.getpid())
     if(logging) {
         logFilePath <- paste0(logFileDir, workerID, '.log')
@@ -56,11 +56,11 @@ minionWorker <- function(host, port, jobsQueue = "jobsqueue", logging = T, logFi
         sink(logFile, type = 'message')
     }
 
-    conn <- redisConnect(host = host, port = port, returnRef = T)
+    conn <- rredis::redisConnect(host = host, port = port, returnRef = T)
 
     while(1) {
 
-        job <- redisBRPopLPush(jobsQueue, workerID)
+        job <- rredis::redisBRPopLPush(jobsQueue, workerID)
 
         func <- job$Function
         params <- job$Parameters
@@ -72,12 +72,12 @@ minionWorker <- function(host, port, jobsQueue = "jobsqueue", logging = T, logFi
         tryCatch(
             {
                 results <- func(params)
-                redisRPush(resultsQueue, results)
+                rredis::redisRPush(resultsQueue, results)
             },
             error = function(e) {
-                redisRPush(errorQueue, e)
+                rredis::redisRPush(errorQueue, e)
             },
-            finally = redisDelete(workerID)
+            finally = rredis::redisDelete(workerID)
         )
     }
 }

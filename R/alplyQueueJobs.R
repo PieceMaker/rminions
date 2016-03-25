@@ -25,7 +25,7 @@
 #'   Defaults to \code{jobsqueue}.
 
 alplyQueueJobs <- function(iter, margins, func, ..., resultsKey, buildJobsList = buildJobsList, jobsQueue = "jobsqueue") {
-    upload <- alply(
+    upload <- plyr::alply(
         .data = iter,
         .margins = margins,
         .fun = buildJobsList,
@@ -34,5 +34,5 @@ alplyQueueJobs <- function(iter, margins, func, ..., resultsKey, buildJobsList =
         ...
     )
 
-    lapply(upload, redisRPush, key = jobsQueue)
+    lapply(upload, rredis::redisRPush, key = jobsQueue)
 }
