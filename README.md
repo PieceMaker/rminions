@@ -107,7 +107,7 @@ To test server maintenance using this system, run the following in a new R proce
 ```R
 library(rredis)
 conn <- redisConnect("Gru-svr", returnRef = T)
-redisPublish("cranPackage", jsonlite::serializeJSON(packageName = "data.table"))
+redisPublish("cranPackage", jsonlite::serializeJSON(list(packageName = "data.table")))
 redisClose(conn)
 ```
 
