@@ -12,7 +12,7 @@ In order to install the `rminions` package you will first need to install the `d
 install.packages("devtools")
 ```
 
-From here you can install the `rminions` package directly from repository.
+From here you can install the `rminions` package directly from GitHub.
 
 ```R
 devtools::install_github("PieceMaker/rminions")
