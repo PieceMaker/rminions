@@ -5,11 +5,14 @@
 \title{A function that defines a channel and handles messages for installing GitHub packages.}
 \usage{
 gitHubPackageChannel(channel = "gitHubPackage",
-  errorChannel = "listenerErrors")
+  successChannel = "listenerSuccesses", errorChannel = "listenerErrors")
 }
 \arguments{
 \item{channel}{The channel to listen for git package installation messages. Defaults
 to \code{gitHubPackage}.}
+
+\item{successChannel}{The channel to publish success messages after GitHub package
+has been successfully installed. Defaults to \code{listenerSuccesses}.}
 
 \item{errorChannel}{The channel to publish errors on if/when they occur. Defaults to
 \code{listenerErrors}.}

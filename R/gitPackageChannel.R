@@ -17,28 +17,41 @@
 #'
 #' @param channel The channel to listen for git package installation messages. Defaults
 #'   to \code{gitPackage}.
+#' @param successChannel The channel to publish success messages after Git package
+#'   has been successfully installed. Defaults to \code{listenerSuccesses}.
 #' @param errorChannel The channel to publish errors on if/when they occur. Defaults to
 #'   \code{listenerErrors}.
 
-gitPackageChannel <- function(channel = "gitPackage", errorChannel = "listenerErrors") {
+gitPackageChannel <- function(channel = "gitPackage", successChannel = "listenerSuccesses", errorChannel = "listenerErrors") {
     callback <- function(message) {
         #Message must be passed in as JSON from jsonlite
         message <- jsonlite::unserializeJSON(message)
         listenerHost <- as.character(R.utils::System$getHostname())
         tryCatch(
-            devtools::install_git(
-                url = message$url,
-                subdir = message$subdir,
-                branch = message$branch
-            ),
-            error = function(e) {
-                e <- sprintf("An error occurred processing job on channel '%s' on listener for server '%s': %s",
-                    channel,
-                    listenerHost,
-                    e
+            {
+                devtools::install_git(
+                    url = message$url,
+                    subdir = message$subdir,
+                    branch = message$branch
+                )
+                successMessage <- sprintf(
+                    "Successfully installed Git package from '%s' on server '%s'.",
+                    message$url,
+                    listenerHost
                 )
                 rredis::redisSetContext(outputConn)
-                rredis::redisPublish(errorChannel, e)
+                rredis::redisPublish(successChannel, successMessage)
+                rredis::redisSetContext(subscribeConn)
+            },
+            error = function(errorMessage) {
+                errorMessage <- sprintf(
+                    "An error occurred processing job on channel '%s' on listener for server '%s': %s",
+                    channel,
+                    listenerHost,
+                errorMessage
+                )
+                rredis::redisSetContext(outputConn)
+                rredis::redisPublish(errorChannel, errorMessage)
                 rredis::redisSetContext(subscribeConn)
             }
         )
