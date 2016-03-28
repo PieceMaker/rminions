@@ -8,9 +8,9 @@
 #' channels. If you wish to automatically subscribe to the channels after they are
 #' defined use \code{minionListener}.
 #'
-#' @export
-#'
 #' @import plyr
+#'
+#' @export
 #'
 #' @param channels A list of functions defining channels to subscribe to with
 #'   corresponding callbacks.
@@ -18,7 +18,7 @@
 
 defineChannels <- function(channels, envir) {
     # Define the callbacks
-    channelNames <- laply(.data = channels, .fun = defineCallback, envir = envir)
+    channelNames <- plyr::laply(.data = channels, .fun = defineCallback, envir = envir)
 
     return(channelNames)
 }
