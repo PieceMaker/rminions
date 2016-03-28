@@ -1,4 +1,4 @@
-Package: RMinions
+Package: rminions
 Title: A Package for Easy R Processing Scalability Via Message Queues
 Version: 0.0.0.9000
 Authors@R: person("Jonathan", "Adams", email = "jd.adams16@gmail.com", role = c("aut", "cre"))
