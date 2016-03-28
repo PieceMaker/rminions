@@ -126,3 +126,16 @@ while(1) {
     redisMonitorChannels()
 }
 ```
+
+# Minion Workers
+
+The core of this system is the workers. Each worker connects to a message queue and then waits until a job is ready to be processed. When it receives a job, it processes it and pushes the results to the provided results queue. It then connects back to the jobs queue and waits to receive another job to begin the cycle again. Whenever a job is begun, the message it received is also saved in a queue unique to the worker to provide the ability to recover in the event that the worker goes down in the middle of processing. Recovery functionality has not been added at this time.
+
+To start a worker on a server, make sure the server can connect to the central Redis server. Then simply run the following command.
+
+```R
+library(rminions)
+minionWorker(host = "Gru-svr")
+```
+
+This will connect to the central Redis server and wait for jobs to be pushed to the default `jobsQueue`. This will block the running process so it is recommended that you background the process or create an Upstart job to begin the worker. The recommended number of workers per server is the number of CPU cores or threads plus 2.
