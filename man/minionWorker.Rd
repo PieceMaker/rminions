@@ -38,7 +38,8 @@ workers running on a system.
 
 The minion worker is constructed to work with nearly all tasks. In order to accomplish
 this, job messages need to be of a specific format. Job message must be lists with three
-keys: \code{Function}, \code{Parameters}, \code{ResultsQueue}, and \code{ErrorQueue}.
+keys: \code{Function}, \code{Parameters}, \code{ResultsQueue}, \code{ErrorQueue}, and
+optionally \code{Packages}.
 
 \code{Function} is the main function that controls the job and holds the core logic. Even
 if the desired job is a simple script, the script should be wrapped in a function which
@@ -56,5 +57,11 @@ returned results in.
 
 \code{ErrorQueue} will be a string with the name of the redis queue to store any errors
 thrown while running the job.
+
+\code{Packages} is an optional key. This accepts a vector of string(s) containing the
+name(s) of any package(s) that need to be loaded before running \code{Function}. This
+will typically be used whenever the function to be run has been bundled into a package
+and you need to load it beforehand. The package(s) will be unloaded after \code{Function}
+has finished running to help prevent memory issues.
 }
 
