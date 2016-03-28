@@ -39,7 +39,7 @@
 #' @export
 #'
 #' @param host The name or ip address of the redis server.
-#' @param port The port the redis server is running on.
+#' @param port The port the redis server is running on. Defaults to 6379.
 #' @param jobsQueue A string giving the name of the queue where jobs will be placed.
 #'   Defaults to \code{jobsqueue}.
 #' @param logging A boolean to enable or disable logging to a file on the system. Defaults
@@ -47,7 +47,7 @@
 #' @param logFileDir A string giving the directory to store worker log files if logging is
 #'   enabled.
 
-minionWorker <- function(host, port, jobsQueue = "jobsqueue", logging = T, logFileDir = "/var/log/R/") {
+minionWorker <- function(host, port = 6379, jobsQueue = "jobsqueue", logging = T, logFileDir = "/var/log/R/") {
     workerHost <- as.character(R.utils::System$getHostname())
     workerID <- paste0(host, '-worker-', Sys.getpid())
     if(logging) {

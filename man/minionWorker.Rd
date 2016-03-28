@@ -4,13 +4,13 @@
 \alias{minionWorker}
 \title{A function that watches a message queue and starts working a job when one is available.}
 \usage{
-minionWorker(host, port, jobsQueue = "jobsqueue", logging = T,
+minionWorker(host, port = 6379, jobsQueue = "jobsqueue", logging = T,
   logFileDir = "/var/log/R/")
 }
 \arguments{
 \item{host}{The name or ip address of the redis server.}
 
-\item{port}{The port the redis server is running on.}
+\item{port}{The port the redis server is running on. Defaults to 6379.}
 
 \item{jobsQueue}{A string giving the name of the queue where jobs will be placed.
 Defaults to \code{jobsqueue}.}
