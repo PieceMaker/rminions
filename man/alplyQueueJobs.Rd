@@ -4,7 +4,7 @@
 \alias{alplyQueueJobs}
 \title{This function constructs all jobs and adds them to the specified queue.}
 \usage{
-alplyQueueJobs(host, iter, margins, func, ..., resultsKey,
+alplyQueueJobs(host, iter, margins, func, ..., resultsQueue, errorQueue,
   buildJobsList = buildJobsList, port = 6379, jobsQueue = "jobsqueue")
 }
 \arguments{
@@ -17,6 +17,12 @@ split up data by. 1 splits up by rows, 2 by columns and c(1,2) by rows and
 columns, and so on for higher dimensions.}
 
 \item{func}{The function to be executed}
+
+\item{...}{Parameters to be passed to \code{func}.}
+
+\item{resultsQueue}{The queue to store returned results in.}
+
+\item{errorQueue}{The queue to store any returned errors in.}
 
 \item{buildJobsList}{The function that performs any required tasks and returns
 job list with keys Function, Params, and ResultsKey for workers. Defaults

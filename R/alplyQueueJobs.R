@@ -19,6 +19,9 @@
 #'   split up data by. 1 splits up by rows, 2 by columns and c(1,2) by rows and
 #'   columns, and so on for higher dimensions.
 #' @param func The function to be executed
+#' @param ... Parameters to be passed to \code{func}.
+#' @param resultsQueue The queue to store returned results in.
+#' @param errorQueue The queue to store any returned errors in.
 #' @param buildJobsList The function that performs any required tasks and returns
 #'   job list with keys Function, Params, and ResultsKey for workers. Defaults
 #'   to generic \code{buildJobsList} function.
@@ -26,13 +29,14 @@
 #' @param jobsQueue A string giving the name of the queue where jobs will be placed.
 #'   Defaults to \code{jobsqueue}.
 
-alplyQueueJobs <- function(host, iter, margins, func, ..., resultsKey, buildJobsList = buildJobsList, port = 6379, jobsQueue = "jobsqueue") {
+alplyQueueJobs <- function(host, iter, margins, func, ..., resultsQueue, errorQueue, buildJobsList = buildJobsList, port = 6379, jobsQueue = "jobsqueue") {
     upload <- plyr::alply(
         .data = iter,
         .margins = margins,
         .fun = buildJobsList,
         func = func,
-        resultsKey = resultsKey,
+        resultsQueue = resultsQueue,
+        errorQueue = errorQueue,
         ...
     )
 

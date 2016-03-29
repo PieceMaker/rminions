@@ -4,7 +4,16 @@
 \alias{buildJobsList}
 \title{This is a generic function for bundling a job in the format required by the workers.}
 \usage{
-buildJobsList(func, ..., resultsKey)
+buildJobsList(func, ..., resultsQueue, errorQueue)
+}
+\arguments{
+\item{func}{The function to be executed.}
+
+\item{...}{Parameters to be passed to \code{func}.}
+
+\item{resultsQueue}{The queue to store returned results in.}
+
+\item{errorQueue}{The queue to store any returned errors in.}
 }
 \description{
 \code{buildJobsList} takes a function, a result key, and any parameters the

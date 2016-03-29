@@ -15,6 +15,9 @@
 #' @param variables Per \code{plyr} docs, variables to split data frame by, as
 #' as.quoted variables, a formula or character vector.
 #' @param func The function to be executed
+#' @param ... Parameters to be passed to \code{func}.
+#' @param resultsQueue The queue to store returned results in.
+#' @param errorQueue The queue to store any returned errors in.
 #' @param buildJobsList The function that performs any required tasks and returns
 #'   job list with keys Function, Params, and ResultsKey for workers. Defaults
 #'   to generic \code{buildJobsList} function.
@@ -22,12 +25,13 @@
 #' @param jobsQueue A string giving the name of the queue where jobs will be placed.
 #'   Defaults to \code{jobsqueue}.
 
-llplyQueueJobs <- function(host, iter, func, ..., resultsKey, buildJobsList = buildJobsList, port = 6379, jobsQueue = "jobsqueue") {
+llplyQueueJobs <- function(host, iter, func, ..., resultsQueue, errorQueue, buildJobsList = buildJobsList, port = 6379, jobsQueue = "jobsqueue") {
     upload <- plyr::llply(
         .data = iter,
         .fun = buildJobsList,
         func = func,
-        resultsKey = resultsKey,
+        resultsQueue = resultsQueue,
+        errorQueue = errorQueue,
         ...
     )
 

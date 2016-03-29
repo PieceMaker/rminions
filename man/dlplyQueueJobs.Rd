@@ -4,7 +4,7 @@
 \alias{dlplyQueueJobs}
 \title{This function constructs all jobs and adds them to the specified queue.}
 \usage{
-dlplyQueueJobs(host, iter, variables, func, ..., resultsKey,
+dlplyQueueJobs(host, iter, variables, func, ..., resultsQueue, errorQueue,
   buildJobsList = buildJobsList, port = 6379, jobsQueue = "jobsqueue")
 }
 \arguments{
@@ -16,6 +16,12 @@ dlplyQueueJobs(host, iter, variables, func, ..., resultsKey,
 as.quoted variables, a formula or character vector.}
 
 \item{func}{The function to be executed}
+
+\item{...}{Parameters to be passed to \code{func}.}
+
+\item{resultsQueue}{The queue to store returned results in.}
+
+\item{errorQueue}{The queue to store any returned errors in.}
 
 \item{buildJobsList}{The function that performs any required tasks and returns
 job list with keys Function, Params, and ResultsKey for workers. Defaults
