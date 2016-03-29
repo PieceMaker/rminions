@@ -4,10 +4,12 @@
 \alias{llplyQueueJobs}
 \title{This function constructs all jobs and adds them to the specified queue.}
 \usage{
-llplyQueueJobs(iter, func, ..., resultsKey, buildJobsList = buildJobsList,
-  jobsQueue = "jobsqueue")
+llplyQueueJobs(host, iter, func, ..., resultsKey,
+  buildJobsList = buildJobsList, port = 6379, jobsQueue = "jobsqueue")
 }
 \arguments{
+\item{host}{The name or ip address of the redis server.}
+
 \item{iter}{A list to be iterated over.}
 
 \item{func}{The function to be executed}
@@ -15,6 +17,8 @@ llplyQueueJobs(iter, func, ..., resultsKey, buildJobsList = buildJobsList,
 \item{buildJobsList}{The function that performs any required tasks and returns
 job list with keys Function, Params, and ResultsKey for workers. Defaults
 to generic \code{buildJobsList} function.}
+
+\item{port}{The port the redis server is running on. Defaults to 6379.}
 
 \item{jobsQueue}{A string giving the name of the queue where jobs will be placed.
 Defaults to \code{jobsqueue}.}

@@ -10,6 +10,7 @@
 #'
 #' @export
 #'
+#' @param host The name or ip address of the redis server.
 #' @param iter A list to be iterated over.
 #' @param variables Per \code{plyr} docs, variables to split data frame by, as
 #' as.quoted variables, a formula or character vector.
@@ -17,10 +18,11 @@
 #' @param buildJobsList The function that performs any required tasks and returns
 #'   job list with keys Function, Params, and ResultsKey for workers. Defaults
 #'   to generic \code{buildJobsList} function.
+#' @param port The port the redis server is running on. Defaults to 6379.
 #' @param jobsQueue A string giving the name of the queue where jobs will be placed.
 #'   Defaults to \code{jobsqueue}.
 
-llplyQueueJobs <- function(iter, func, ..., resultsKey, buildJobsList = buildJobsList, jobsQueue = "jobsqueue") {
+llplyQueueJobs <- function(host, iter, func, ..., resultsKey, buildJobsList = buildJobsList, port = 6379, jobsQueue = "jobsqueue") {
     upload <- plyr::llply(
         .data = iter,
         .fun = buildJobsList,
@@ -29,5 +31,7 @@ llplyQueueJobs <- function(iter, func, ..., resultsKey, buildJobsList = buildJob
         ...
     )
 
+    conn <- rredis::redisConnect(host = host, port = port, returnRef = T)
     lapply(upload, rredis::redisRPush, key = jobsQueue)
+    rredis::redisClose(conn)
 }

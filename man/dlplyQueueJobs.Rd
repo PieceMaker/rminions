@@ -4,10 +4,12 @@
 \alias{dlplyQueueJobs}
 \title{This function constructs all jobs and adds them to the specified queue.}
 \usage{
-dlplyQueueJobs(iter, variables, func, ..., resultsKey,
-  buildJobsList = buildJobsList, jobsQueue = "jobsqueue")
+dlplyQueueJobs(host, iter, variables, func, ..., resultsKey,
+  buildJobsList = buildJobsList, port = 6379, jobsQueue = "jobsqueue")
 }
 \arguments{
+\item{host}{The name or ip address of the redis server.}
+
 \item{iter}{Data frame to be iterated over.}
 
 \item{variables}{Per \code{plyr} docs, variables to split data frame by, as
@@ -18,6 +20,8 @@ as.quoted variables, a formula or character vector.}
 \item{buildJobsList}{The function that performs any required tasks and returns
 job list with keys Function, Params, and ResultsKey for workers. Defaults
 to generic \code{buildJobsList} function.}
+
+\item{port}{The port the redis server is running on. Defaults to 6379.}
 
 \item{jobsQueue}{A string giving the name of the queue where jobs will be placed.
 Defaults to \code{jobsqueue}.}

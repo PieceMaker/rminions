@@ -4,10 +4,12 @@
 \alias{alplyQueueJobs}
 \title{This function constructs all jobs and adds them to the specified queue.}
 \usage{
-alplyQueueJobs(iter, margins, func, ..., resultsKey,
-  buildJobsList = buildJobsList, jobsQueue = "jobsqueue")
+alplyQueueJobs(host, iter, margins, func, ..., resultsKey,
+  buildJobsList = buildJobsList, port = 6379, jobsQueue = "jobsqueue")
 }
 \arguments{
+\item{host}{The name or ip address of the redis server.}
+
 \item{iter}{Matrix, array, or data frame to be iterated over.}
 
 \item{margins}{Per \code{plyr} docs, a vector giving the subscripts to
@@ -19,6 +21,8 @@ columns, and so on for higher dimensions.}
 \item{buildJobsList}{The function that performs any required tasks and returns
 job list with keys Function, Params, and ResultsKey for workers. Defaults
 to generic \code{buildJobsList} function.}
+
+\item{port}{The port the redis server is running on. Defaults to 6379.}
 
 \item{jobsQueue}{A string giving the name of the queue where jobs will be placed.
 Defaults to \code{jobsqueue}.}
