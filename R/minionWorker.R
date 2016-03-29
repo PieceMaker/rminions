@@ -41,7 +41,7 @@
 #' and you need to load it beforehand. The package(s) will be unloaded after \code{Function}
 #' has finished running to help prevent memory issues.
 #'
-#' @import rredis R.utils
+#' @import plyr rredis R.utils
 #'
 #' @export
 #'
@@ -71,7 +71,7 @@ minionWorker <- function(host, port = 6379, jobsQueue = "jobsqueue", logging = T
 
         packages <- job$Packages
         if(!is.null(packages)) {
-            sapply(packages, library)
+            plyr::a_ply(packages, 1, library, character.only = T)
         }
         func <- job$Function
         params <- job$Parameters
@@ -91,7 +91,14 @@ minionWorker <- function(host, port = 6379, jobsQueue = "jobsqueue", logging = T
             finally = {
                 rredis::redisDelete(workerID)
                 if(!is.null(packages)) {
-                    sapply(packages, detach, unload = T)
+                    plyr::a_ply(
+                        packages,
+                        1,
+                        function(package) {
+                            package <- paste0("package:", package)
+                            detach(package, unload = T, character.only = T)
+                        }
+                    )
                 }
             }
         )
