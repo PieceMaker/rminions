@@ -19,7 +19,7 @@
 #' @param resultsQueue The queue to store returned results in.
 #' @param errorQueue The queue to store any returned errors in.
 #' @param buildJobsList The function that performs any required tasks and returns
-#'   job list with keys Function, Params, and ResultsKey for workers. Defaults
+#'   job list with keys Function, Parameters, and ResultsKey for workers. Defaults
 #'   to generic \code{buildJobsList} function.
 #' @param port The port the redis server is running on. Defaults to 6379.
 #' @param jobsQueue A string giving the name of the queue where jobs will be placed.

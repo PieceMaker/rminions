@@ -18,7 +18,7 @@ buildJobsList(func, ..., resultsQueue, errorQueue)
 \description{
 \code{buildJobsList} takes a function, a result key, and any parameters the
 function requires and returns a list in the form the workers can understand, i.e.
-a list with the following keys: Function, Params, and ResultsKey.
+a list with the following keys: Function, Parameters, and ResultsKey.
 }
 \details{
 If the job you wish to run requires significant setup to define a job, it may be useful

@@ -25,7 +25,7 @@ columns, and so on for higher dimensions.}
 \item{errorQueue}{The queue to store any returned errors in.}
 
 \item{buildJobsList}{The function that performs any required tasks and returns
-job list with keys Function, Params, and ResultsKey for workers. Defaults
+job list with keys Function, Parameters, and ResultsKey for workers. Defaults
 to generic \code{buildJobsList} function.}
 
 \item{port}{The port the redis server is running on. Defaults to 6379.}
