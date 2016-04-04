@@ -1,6 +1,6 @@
 Package: rminions
 Title: A Package for Easy R Processing Scalability Via Message Queues
-Version: 1.0.0
+Version: 1.1.0
 Authors@R: person("Jonathan", "Adams", email = "jd.adams16@gmail.com", role = c("aut", "cre"))
 Description: This package provides generic functions to allow easy setup of worker servers
     in a distributed message-based computing environment for R. This environment uses Redis
