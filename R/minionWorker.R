@@ -56,7 +56,7 @@
 
 minionWorker <- function(host, port = 6379, jobsQueue = "jobsqueue", logging = T, logFileDir = "/var/log/R/") {
     workerHost <- as.character(R.utils::System$getHostname())
-    workerID <- paste0(host, '-worker-', Sys.getpid())
+    workerID <- paste0(workerHost, '-worker-', Sys.getpid())
     if(logging) {
         logFilePath <- paste0(logFileDir, workerID, '.log')
         logFile <- file(logFilePath, open = 'a')
