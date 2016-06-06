@@ -106,28 +106,28 @@ minionWorker <- function(host, port = 6379, jobsQueue = "jobsqueue", logLevel = 
 
                 if(is.null(errorQueue)) {
                     Rbunyan::bunyanLog.error("ErrorQueue not provided.")
-                    job$error <- "ErrorQueue not provided."
+                    job$Error <- "ErrorQueue not provided."
                     rredis::redisRPush(
                         "missingErrorQueueErrors",
                         job
                     )
                 } else if(is.null(func)) {
                     Rbunyan::bunyanLog.error("Function not provided.")
-                    job$error <- "Function not provided."
+                    job$Error <- "Function not provided."
                     rredis::redisRPush(
                         "errorQueue",
                         job
                     )
                 } else if(is.null(params)) {
                     Rbunyan::bunyanLog.error("Parameters not provided.")
-                    job$error <- "Parameters not provided."
+                    job$Error <- "Parameters not provided."
                     rredis::redisRPush(
                         "errorQueue",
                         job
                     )
                 } else if(is.null(resultsQueue)) {
                     Rbunyan::bunyanLog.error("ResultsQueue not provided.")
-                    job$error <- "ResultsQueue not provided."
+                    job$Error <- "ResultsQueue not provided."
                     rredis::redisRPush(
                         "errorQueue",
                         job
@@ -152,7 +152,8 @@ minionWorker <- function(host, port = 6379, jobsQueue = "jobsqueue", logLevel = 
                                     e
                                 )
                             )
-                            rredis::redisRPush(errorQueue, e)
+                            job$Error <- e
+                            rredis::redisRPush(errorQueue, job)
                         },
                         finally = {
                             rredis::redisDelete(workerID)
