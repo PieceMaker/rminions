@@ -73,7 +73,20 @@ minionWorker <- function(host, port = 6379, jobsQueue = "jobsqueue", logLevel = 
         )
     )
 
-    conn <- rredis::redisConnect(host = host, port = port, returnRef = T)
+    tryCatch(
+        {
+            conn <- rredis::redisConnect(host = host, port = port, returnRef = T)
+        },
+        error = function(e) {
+            Rbunyan::bunyanLog.error(
+                sprintf(
+                    "An error occurred while connecting to Redis server: %s",
+                    e
+                )
+            )
+            stop(e)
+        }
+    )
 
     while(1) {
 
