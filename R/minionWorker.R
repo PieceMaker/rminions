@@ -138,7 +138,7 @@ minionWorker <- function(host, port = 6379, jobsQueue = "jobsqueue", logLevel = 
                     Rbunyan::bunyanLog.debug(
                         sprintf(
                             "Sending results to queue %s: %s",
-                            responseQueue,
+                            resultsQueue,
                             jsonlite::serializeJSON(results, auto_unbox = T)
                         )
                     )
