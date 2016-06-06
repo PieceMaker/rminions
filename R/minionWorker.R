@@ -53,7 +53,7 @@
 #'   Level threshold required to trigger log write. You can change the level on an
 #'   existing log.
 #' @param logFileDir A string giving the directory to store worker log files if logging is
-#'   enabled. Defaults to \code{/var/log/R/}. Set to \code{stdout} to output logs to
+#'   enabled. Defaults to \code{/var/log/R}. Set to \code{stdout} to output logs to
 #'   standard out.
 
 minionWorker <- function(host, port = 6379, jobsQueue = "jobsqueue", logLevel = 'DEBUG', logFileDir = "/var/log/R") {
