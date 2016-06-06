@@ -139,7 +139,7 @@ minionWorker <- function(host, port = 6379, jobsQueue = "jobsqueue", logLevel = 
                         sprintf(
                             "Sending results to queue %s: %s",
                             resultsQueue,
-                            jsonlite::serializeJSON(results, auto_unbox = T)
+                            jsonlite::serializeJSON(results)
                         )
                     )
                     rredis::redisRPush(resultsQueue, results)
