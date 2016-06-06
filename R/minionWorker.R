@@ -56,7 +56,7 @@
 #'   enabled. Defaults to \code{/var/log/R/}. Set to \code{stdout} to output logs to
 #'   standard out.
 
-minionWorker <- function(host, port = 6379, jobsQueue = "jobsqueue", logLevel = 'DEBUG', logFileDir = "/var/log/R/") {
+minionWorker <- function(host, port = 6379, jobsQueue = "jobsqueue", logLevel = 'DEBUG', logFileDir = "/var/log/R") {
     workerHost <- as.character(R.utils::System$getHostname())
     workerID <- paste0(workerHost, '-worker-', Sys.getpid())
     if(logFileDir == 'stdout') {
