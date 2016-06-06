@@ -178,8 +178,16 @@ minionWorker <- function(host, port = 6379, jobsQueue = "jobsqueue", logLevel = 
                         e
                     )
                 )
-                job$Error <- e
-                rredis::redisRPush(errorQueue, job)
+                if(is.list(job)) {
+                    job$Error <- e
+                    if(is.null(job$errorQueue)) {
+                        rredis::redisRPush('unhandledErrors', job)
+                    } else {
+                        rredis::redisRPush(job$errorQueue, job)
+                    }
+                } else {
+                    rredis::redisRPush('unhandledErrors', e)
+                }
             }
         )
     }
