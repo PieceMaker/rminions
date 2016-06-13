@@ -48,7 +48,7 @@ gitPackageChannel <- function(channel = "gitPackage", successChannel = "listener
                     "An error occurred processing job on channel '%s' on listener for server '%s': %s",
                     channel,
                     listenerHost,
-                errorMessage
+                    errorMessage
                 )
                 rredis::redisSetContext(outputConn)
                 rredis::redisPublish(errorChannel, errorMessage)

@@ -41,7 +41,7 @@
 #' and you need to load it beforehand. The package(s) will be unloaded after \code{Function}
 #' has finished running to help prevent memory issues.
 #'
-#' @import plyr rredis R.utils
+#' @import plyr rredis R.utils Rbunyan
 #'
 #' @export
 #'
@@ -49,56 +49,144 @@
 #' @param port The port the redis server is running on. Defaults to 6379.
 #' @param jobsQueue A string giving the name of the queue where jobs will be placed.
 #'   Defaults to \code{jobsqueue}.
-#' @param logging A boolean to enable or disable logging to a file on the system. Defaults
-#'   to \code{true}.
+#' @param logLevel A string, required. 'TRACE', 'DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL'.
+#'   Level threshold required to trigger log write. You can change the level on an
+#'   existing log.
 #' @param logFileDir A string giving the directory to store worker log files if logging is
-#'   enabled.
+#'   enabled. Defaults to \code{/var/log/R}. Set to \code{stdout} to output logs to
+#'   standard out.
 
-minionWorker <- function(host, port = 6379, jobsQueue = "jobsqueue", logging = T, logFileDir = "/var/log/R/") {
+minionWorker <- function(host, port = 6379, jobsQueue = "jobsqueue", logLevel = 'DEBUG', logFileDir = "/var/log/R") {
     workerHost <- as.character(R.utils::System$getHostname())
     workerID <- paste0(workerHost, '-worker-', Sys.getpid())
-    if(logging) {
-        logFilePath <- paste0(logFileDir, workerID, '.log')
-        logFile <- file(logFilePath, open = 'a')
-        sink(logFile, type = 'message')
+    if(logFileDir == 'stdout') {
+        logFile = 'stdout'
+    } else {
+        logFile = paste0(workerID, '.log')
     }
 
-    conn <- rredis::redisConnect(host = host, port = port, returnRef = T)
+    Rbunyan::bunyanSetLog(level = logLevel, memlines = 0, logpath = logFileDir, logfile = logFile)
+    Rbunyan::bunyanLog.info(
+        sprintf(
+            "Started worker on host %s.",
+            workerHost
+        )
+    )
+
+    tryCatch(
+        {
+            conn <- rredis::redisConnect(host = host, port = port, returnRef = T)
+        },
+        error = function(e) {
+            Rbunyan::bunyanLog.error(
+                sprintf(
+                    "An error occurred while connecting to Redis server: %s",
+                    e
+                )
+            )
+            stop(e)
+        }
+    )
 
     while(1) {
-
-        job <- rredis::redisBRPopLPush(jobsQueue, workerID)
-
-        packages <- job$Packages
-        if(!is.null(packages)) {
-            plyr::a_ply(packages, 1, library, character.only = T)
-        }
-        func <- job$Function
-        params <- job$Parameters
-        #Pass in redis connection in case it is needed inside func
-        params$redisConn <- conn
-        resultsQueue <- job$ResultsQueue
-        errorQueue <- job$ErrorQueue
-
         tryCatch(
             {
-                results <- func(params)
-                rredis::redisRPush(resultsQueue, results)
-            },
-            error = function(e) {
-                rredis::redisRPush(errorQueue, e)
-            },
-            finally = {
-                rredis::redisDelete(workerID)
+                job <- rredis::redisBRPopLPush(jobsQueue, workerID)
+
+                packages <- job$Packages
                 if(!is.null(packages)) {
-                    plyr::a_ply(
-                        packages,
-                        1,
-                        function(package) {
-                            package <- paste0("package:", package)
-                            detach(package, unload = T, character.only = T)
+                    plyr::a_ply(packages, 1, library, character.only = T)
+                }
+                func <- job$Function
+                params <- job$Parameters
+                #Pass in redis connection in case it is needed inside func
+                params$redisConn <- conn
+                resultsQueue <- job$ResultsQueue
+                errorQueue <- job$ErrorQueue
+
+                if(is.null(errorQueue)) {
+                    Rbunyan::bunyanLog.error("ErrorQueue not provided.")
+                    job$Error <- "ErrorQueue not provided."
+                    rredis::redisRPush(
+                        "missingErrorQueueErrors",
+                        job
+                    )
+                } else if(is.null(func)) {
+                    Rbunyan::bunyanLog.error("Function not provided.")
+                    job$Error <- "Function not provided."
+                    rredis::redisRPush(
+                        "errorQueue",
+                        job
+                    )
+                } else if(is.null(params)) {
+                    Rbunyan::bunyanLog.error("Parameters not provided.")
+                    job$Error <- "Parameters not provided."
+                    rredis::redisRPush(
+                        "errorQueue",
+                        job
+                    )
+                } else if(is.null(resultsQueue)) {
+                    Rbunyan::bunyanLog.error("ResultsQueue not provided.")
+                    job$Error <- "ResultsQueue not provided."
+                    rredis::redisRPush(
+                        "errorQueue",
+                        job
+                    )
+                } else {
+                    tryCatch(
+                        {
+                            results <- func(params)
+                            Rbunyan::bunyanLog.debug(
+                                sprintf(
+                                    "Sending results to queue %s: %s",
+                                    resultsQueue,
+                                    jsonlite::serializeJSON(results)
+                                )
+                            )
+                            rredis::redisRPush(resultsQueue, results)
+                        },
+                        error = function(e) {
+                            Rbunyan::bunyanLog.error(
+                                sprintf(
+                                    "An error occurred while executing R function: %s",
+                                    e
+                                )
+                            )
+                            job$Error <- e
+                            rredis::redisRPush(errorQueue, job)
+                        },
+                        finally = {
+                            rredis::redisDelete(workerID)
+                            if(!is.null(packages)) {
+                                plyr::a_ply(
+                                    packages,
+                                    1,
+                                    function(package) {
+                                        package <- paste0("package:", package)
+                                        detach(package, unload = T, character.only = T)
+                                    }
+                                )
+                            }
                         }
                     )
+                }
+            },
+            error = function(e) {
+                Rbunyan::bunyanLog.error(
+                    sprintf(
+                        "An unhandled error occurred while executing R function: %s",
+                        e
+                    )
+                )
+                if(is.list(job)) {
+                    job$Error <- e
+                    if(is.null(job$errorQueue)) {
+                        rredis::redisRPush('unhandledErrors', job)
+                    } else {
+                        rredis::redisRPush(job$errorQueue, job)
+                    }
+                } else {
+                    rredis::redisRPush('unhandledErrors', e)
                 }
             }
         )

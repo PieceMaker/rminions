@@ -43,7 +43,7 @@ cranPackageChannel <- function(channel = "cranPackage", successChannel = "listen
                     "An error occurred processing job on channel '%s' on listener for server '%s': %s",
                     channel,
                     listenerHost,
-                errorMessage
+                    errorMessage
                 )
                 rredis::redisSetContext(outputConn)
                 rredis::redisPublish(errorChannel, errorMessage)
