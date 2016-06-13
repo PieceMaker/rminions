@@ -32,68 +32,32 @@
 #' @param channels A list of functions defining channels to subscribe to with
 #'   corresponding callbacks.
 #' @param port The port the redis server is running on. Defaults to 6379.
-#' @param logLevel A string, required. 'TRACE', 'DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL'.
-#'   Level threshold required to trigger log write. You can change the level on an
-#'   existing log.
+#' @param logging A boolean to enable or disable logging to a file on the system. Defaults
+#'   to \code{true}.
 #' @param logFileDir A string giving the directory to store worker log files if logging is
-#'   enabled. Defaults to \code{/var/log/R}. Set to \code{stdout} to output logs to
-#'   standard out.
+#'   enabled.
 
-minionListener <- function(host, channels, port = 6379, logLevel = 'DEBUG', logFileDir = "/var/log/R") {
+minionListener <- function(host, channels, port = 6379, logging = T, logFileDir = "/var/log/R/") {
     globalEnvironment <- globalenv()
 
     listenerHost <- as.character(R.utils::System$getHostname())
     listenerID <- paste0(host, '-listener-', Sys.getpid())
-    if(logFileDir == 'stdout') {
-        logFile = 'stdout'
-    } else {
-        logFile = paste0(listenerID, '.log')
+    if(logging) {
+        logFilePath <- paste0(logFileDir, listenerID, '.log')
+        logFile <- file(logFilePath, open = 'a')
+        sink(logFile, type = 'message')
     }
-
-    Rbunyan::bunyanSetLog(level = logLevel, memlines = 0, logpath = logFileDir, logfile = logFile)
-    Rbunyan::bunyanLog.info(
-        sprintf(
-            "Started listener on host %s.",
-            listenerHost
-        )
-    )
 
     # Redis needs two connections. One for subscribing and one for publishing, popping, and pushing.
     # Save their references globally so they can be easily accessed anywhere
     # TODO: Try to find a way to pass references around so they do not have to be in global variables
-    tryCatch(
-        {
-            outputConn <<- rredis::redisConnect(host = host, port = port, returnRef = T)
-            subscribeConn <<- rredis::redisConnect(host = host, port = port, returnRef = T)
-        },
-        error = function(e) {
-            Rbunyan::bunyanLog.error(
-                sprintf(
-                    "An error occurred while connecting to Redis server: %s",
-                    e
-                )
-            )
-            stop(e)
-        }
-    )
-
+    outputConn <<- rredis::redisConnect(host = host, port = port, returnRef = T)
+    subscribeConn <<- rredis::redisConnect(host = host, port = port, returnRef = T)
 
     # Define the callbacks
     channelNames <- defineChannels(channels, globalEnvironment)
 
-    tryCatch(
-        {
-            rredis::redisSubscribe(channelNames)
-        },
-        error = function(e) {
-            sprintf(
-                "An error occurred while subscribing to channels %s: %s",
-                paste(channelNames, collapse = ","),
-                e
-            )
-            stop(e)
-        }
-    )
+    rredis::redisSubscribe(channelNames)
 
     while(1) {
         # TODO: Explore why the error is not being suppressed inside the callback

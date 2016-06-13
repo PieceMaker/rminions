@@ -4,8 +4,8 @@
 \alias{minionWorker}
 \title{A function that watches a message queue and starts working a job when one is available.}
 \usage{
-minionWorker(host, port = 6379, jobsQueue = "jobsqueue",
-  logLevel = "DEBUG", logFileDir = "/var/log/R")
+minionWorker(host, port = 6379, jobsQueue = "jobsqueue", logging = T,
+  logFileDir = "/var/log/R/")
 }
 \arguments{
 \item{host}{The name or ip address of the redis server.}
@@ -15,13 +15,11 @@ minionWorker(host, port = 6379, jobsQueue = "jobsqueue",
 \item{jobsQueue}{A string giving the name of the queue where jobs will be placed.
 Defaults to \code{jobsqueue}.}
 
-\item{logLevel}{A string, required. 'TRACE', 'DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL'.
-Level threshold required to trigger log write. You can change the level on an
-existing log.}
+\item{logging}{A boolean to enable or disable logging to a file on the system. Defaults
+to \code{true}.}
 
 \item{logFileDir}{A string giving the directory to store worker log files if logging is
-enabled. Defaults to \code{/var/log/R}. Set to \code{stdout} to output logs to
-standard out.}
+enabled.}
 }
 \description{
 \code{minionWorker} is a blocking function that will completely block the R instance

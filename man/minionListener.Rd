@@ -4,8 +4,8 @@
 \alias{minionListener}
 \title{A function that subscribes to a channel and performs various server-wide R tasks.}
 \usage{
-minionListener(host, channels, port = 6379, logLevel = "DEBUG",
-  logFileDir = "/var/log/R")
+minionListener(host, channels, port = 6379, logging = T,
+  logFileDir = "/var/log/R/")
 }
 \arguments{
 \item{host}{The name or ip address of the redis server.}
@@ -15,13 +15,11 @@ corresponding callbacks.}
 
 \item{port}{The port the redis server is running on. Defaults to 6379.}
 
-\item{logLevel}{A string, required. 'TRACE', 'DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL'.
-Level threshold required to trigger log write. You can change the level on an
-existing log.}
+\item{logging}{A boolean to enable or disable logging to a file on the system. Defaults
+to \code{true}.}
 
 \item{logFileDir}{A string giving the directory to store worker log files if logging is
-enabled. Defaults to \code{/var/log/R}. Set to \code{stdout} to output logs to
-standard out.}
+enabled.}
 }
 \description{
 \code{minionListener} is a blocking function that will completely block the R
