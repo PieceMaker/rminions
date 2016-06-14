@@ -147,3 +147,81 @@ The workers have been written to run any task as long as it is bundled into a fu
 For complex jobs that require calls to multiple custom functions, it is recommended you bundle them into a package and have a controller function which contains the logic that would usually be placed in a script. This controller function is what will be passed to the workers.
 
 Since this package was developed to satisfy a need to replicate jobs numerous times, several helper functions have been provided to assist in quickly pushing multiple jobs to a queue. These are the `*lplyQueueJobs` functions, where `*` is `a`, `d`, and `l`. These functions accept an object to be iterated over, the function for the worker to execute, the parameters it needs to run, and the response and error queue. These functions also accept a function used to build the job message in the above list format. By default they call a default builder function whose only task is to accept the inputs and return the formatted list. If you require calculations or data wrangling to arrive at the inputs to your function, then you will need to write a custom job builder function and pass it in the `buildJobsList` parameter. 
+
+# Upstart
+
+As was mentioned earlier in the README, Upstart can be used to automatically launch workers whenever a server is brought online. Below are some sample scripts that start one listener and ten workers on the server. The directories have been placed as comments at the top of each script for illustrative purposes only and may be changed for your implementation.
+
+```bash
+# /etc/init/rminions.conf
+
+description "Spawn R minion workers and listener"
+ 
+start on filesystem and static-network-up
+ 
+pre-start script
+    for inst in $(seq 10)
+    do
+        start minion-worker id=$inst
+    done
+ 
+    start minion-listener id=1
+end script
+ 
+post-stop script
+    for inst in $(initctl list | grep "^minion-worker " | awk '{print $2}' | tr -d ')' | tr -d '(')
+    do
+        stop minion-worker id=$inst
+    done
+ 
+    stop minion-listener id=1
+end script
+```
+
+```bash
+# /etc/init/minion-listener.conf
+
+description "R Minion Listener"
+ 
+instance $id
+ 
+console log
+ 
+respawn
+exec start-stop-daemon --start --make-pidfile --pidfile /run/minionListener$id.pid --exec /usr/bin/R CMD BATCH /usr/local/lib/R/site-library/launchMinionListener.R /var/log/rminions/minionListener$id.log
+```
+
+```bash
+# /etc/init/minion-worker.conf
+
+description "R Minion Worker"
+ 
+instance $id
+ 
+console log
+ 
+respawn
+exec start-stop-daemon --start --make-pidfile --pidfile /run/minionWorker$id.pid --exec /usr/bin/R CMD BATCH /usr/local/lib/R/site-library/launchMinionWorker.R /var/log/rminions/minionWorker$id.log
+```
+
+```R
+# /usr/local/lib/R/site-library/launchMinionListener.R
+
+library(rminions)
+
+minionListener(host = "Gru-svr", channels = list(cranPackageChannel(), gitHubPackageChannel(), gitPackageChannel()))
+```
+
+```R
+# /usr/local/lib/R/site-library/launchMinionWorker.R
+
+library(rminions)
+ 
+minionWorker(host = "Gru-svr")
+```
+
+To manually start or stop the listener and workers, simply run the following command (choosing one of start or stop):
+
+```bash
+sudo start/stop rminions
+```
