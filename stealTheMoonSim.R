@@ -30,4 +30,6 @@ stealTheMoonSim <- function(params) {
     # Assume dependence structure between flare emitting surface and additional Fuel required can be modeled
     # with a Clayton copula with parameter 10
     surfaceFuelDependenceCop <- claytonCopula(10, dim = 2)
+
+    # TODO: Try to add asteroid model
 }
