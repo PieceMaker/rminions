@@ -18,9 +18,9 @@ stealTheMoonSim <- function(params) {
         scale = 0.75
     )
 
-    # Assume additional amount of fuel required (in 100,000 pounds) is lognormally distributed with meanlog 0.2
-    # and sdlog 0.5
-    additionalFuelParams <- list(
+    # Assume additional amount of fuel required due to flares (in 100,000 pounds) is lognormally distributed with
+    # meanlog 0.2 and sdlog 0.5
+    flareAdditionalFuelParams <- list(
         meanlog = 0.2,
         sdlog = 0.5
     )
@@ -30,12 +30,32 @@ stealTheMoonSim <- function(params) {
     surfaceFuelDependenceCop <- copula::claytonCopula(10, dim = 2)
 
     # TODO: Try to add asteroid model
+    # An asteroid shower is expected to occur while travelling too and from the Moon. Assume the travel path
+    # to moon has been divided into 1,000,000 segments and that the number of asteroids we have to dodge in any
+    # segment is distributed Poisson with lambda 0.005.
+    astroidParams <- list(
+        lambda = 0.005
+    )
+
+    # Assume the additional amount of fuel required (in 100 pounds) for dodging an asteroid is normally
+    # distributed with mean 1.5 and sd 0.25.
+    astroidAdditionalFuelParams <- list(
+        mean = 1.5,
+        sd = 0.25
+    )
+
+    # TODO: Need an additional model to represent the length of time (in path segments) each flare lasts
+    # TODO: so we will know which astroid-related fuel requirements will be affected by flares. Also need
+    # TODO: a way of determining how long before flares.
+    # Assume the dependence structure between flare surface and fuel required to dodge astroids is a Gumbel
+    # with param 3.
+    asteroidDodgeFuelDependenceCop <- copula::gumbelCopula(3, dim = 2)
 
     baseFuel <- rlnorm(1, meanlog = fuelParams$meanlog, sdlog = fuelParams$sdlog)
     numSolarFlares <- rpois(1, lambda = solarFlareParams$lambda)
     flareSurface <- rgamma(numSolarFlares, shape = flareSurfaceParams$shape, scale = flareSurfaceParams$scale)
     flareSurfaceUnif <- pgamma(flareSurface, shape = flareSurfaceParams$shape, scale = flareSurfaceParams$scale)
-    additionalFuelUnif <- rtrafo(
+    flareAdditionalFuelUnif <- rtrafo(
         u = as.matrix(
             cbind(
                 flareSurfaceUnif,
@@ -46,14 +66,14 @@ stealTheMoonSim <- function(params) {
         j.ind = 2,
         inverse = T
     )
-    # Additional required fuel, converted to millions of pounds
-    additionalFuel <- qlnorm(additionalFuelUnif, meanlog = additionalFuelParams$meanlog, sdlog = additionalFuelParams$sdlog)/10
-    totalFuel <- baseFuel + sum(additionalFuel)
+    # Additional required fuel due to solar flares, converted to millions of pounds
+    flareAdditionalFuel <- qlnorm(flareAdditionalFuelUnif, meanlog = flareAdditionalFuelParams$meanlog, sdlog = flareAdditionalFuelParams$sdlog)/10
+    totalFuel <- baseFuel + sum(flareAdditionalFuel)
 
     response <- list(
         numSolarFlares = numSolarFlares,
         flareSurface = flareSurface,
-        additionalFuel = additionalFuel,
+        flareAdditionalFuel = flareAdditionalFuel,
         totalFuel = totalFuel
     )
     return(response)
