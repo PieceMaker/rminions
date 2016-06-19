@@ -146,7 +146,28 @@ The workers have been written to run any task as long as it is bundled into a fu
 
 For complex jobs that require calls to multiple custom functions, it is recommended you bundle them into a package and have a controller function which contains the logic that would usually be placed in a script. This controller function is what will be passed to the workers.
 
-Since this package was developed to satisfy a need to replicate jobs numerous times, several helper functions have been provided to assist in quickly pushing multiple jobs to a queue. These are the `*lplyQueueJobs` functions, where `*` is `a`, `d`, and `l`. These functions accept an object to be iterated over, the function for the worker to execute, the parameters it needs to run, and the response and error queue. These functions also accept a function used to build the job message in the above list format. By default they call a default builder function whose only task is to accept the inputs and return the formatted list. If you require calculations or data wrangling to arrive at the inputs to your function, then you will need to write a custom job builder function and pass it in the `buildJobsList` parameter. 
+Since this package was developed to satisfy a need to replicate jobs numerous times, several helper functions have been provided to assist in quickly pushing multiple jobs to a queue. These are the `*lplyQueueJobs` functions, where `*` is `a`, `d`, and `l`. These functions accept an object to be iterated over, the function for the worker to execute, the parameters it needs to run, and the response and error queue. These functions also accept a function used to build the job message in the above list format. By default they call a default builder function whose only task is to accept the inputs and return the formatted list. If you require calculations or data wrangling to arrive at the inputs to your function, then you will need to write a custom job builder function and pass it in the `buildJobsList` parameter.
+ 
+# Steal The Moon Example
+
+An example has been included with this package. It can be run with the following code:
+
+```R
+library(rminions)
+source('./buildMoonSimJobsList.R')
+source('./stealTheMoonSim.R')
+
+alplyQueueJobs(
+    host = 'Gru-svr',
+    iter = c(1:10000),
+    margins = 1,
+    func = stealTheMoonSim,
+    resultsQueue = 'stealTheMoonSim',
+    errorQueue = 'stealTheMoonSimErrors'
+)
+```
+
+In this example, `buildMoonSimJobsList` generates distributional parameters and returns the job lists that `alplyQueueJobs` will queue. The workers then pick up these jobs and execute `stealTheMoonSim` with the parameters generated in `buildMoonSimJobsList`.
 
 # Upstart
 
