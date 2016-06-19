@@ -44,13 +44,6 @@ stealTheMoonSim <- function(params) {
         sd = 0.25
     )
 
-    # TODO: Need an additional model to represent the length of time (in path segments) each flare lasts
-    # TODO: so we will know which asteroid-related fuel requirements will be affected by flares. Also need
-    # TODO: a way of determining how long before flares.
-    # Assume the dependence structure between flare surface and fuel required to dodge asteroids is a Gumbel
-    # with param 3.
-    asteroidDodgeFuelDependenceCop <- copula::gumbelCopula(3, dim = 2)
-
     baseFuel <- rlnorm(1, meanlog = fuelParams$meanlog, sdlog = fuelParams$sdlog)
     numSolarFlares <- rpois(1, lambda = solarFlareParams$lambda)
     flareSurface <- rgamma(numSolarFlares, shape = flareSurfaceParams$shape, scale = flareSurfaceParams$scale)
