@@ -162,6 +162,7 @@ alplyQueueJobs(
     iter = c(1:10000),
     margins = 1,
     func = stealTheMoonSim,
+    buildJobsList = buildMoonSimJobsList,
     resultsQueue = 'stealTheMoonSim',
     errorQueue = 'stealTheMoonSimErrors'
 )
