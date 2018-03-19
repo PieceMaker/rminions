@@ -41,4 +41,3 @@ pushes them to the specified queue.
 \code{iter} is a data frame to iterate over. Use \code{variables} to
 specify how to split it.
 }
-

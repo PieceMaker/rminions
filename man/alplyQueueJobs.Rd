@@ -44,4 +44,3 @@ also be an integer specifying how many times to repeat the job. Use the
 \code{margins} argument to specify how to split \code{iter}. If \code{iter}
 is an integer, then set \code{margins} to 1.
 }
-

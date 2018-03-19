@@ -29,4 +29,3 @@ be lists with one key, \code{packageName}, which should be a string containing t
 of the package to be installed. The handler then takes this string and installs the
 package of that name from CRAN.
 }
-

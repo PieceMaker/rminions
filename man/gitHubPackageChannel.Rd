@@ -30,4 +30,3 @@ and the optional keys are \code{subdir} and \code{username}. For more informatio
 these values, see the documentation for \code{install_github} from the \code{devtools}
 package.
 }
-

@@ -30,4 +30,3 @@ and the optional keys are \code{subdir} and \code{branch}. For more information 
 these values, see the documentation for \code{install_git} from the \code{devtools}
 package.
 }
-

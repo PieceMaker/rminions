@@ -40,4 +40,3 @@ pushes them to the specified queue.
 \details{
 \code{iter} is a list to iterate over.
 }
-

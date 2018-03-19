@@ -22,4 +22,3 @@ This function should be used if you plan on manually subscribing to and monitori
 channels. If you wish to automatically subscribe to the channels after they are
 defined use \code{minionListener}.
 }
-

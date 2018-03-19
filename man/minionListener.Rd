@@ -49,4 +49,3 @@ callbacks. After testing, it appears this is the only way to successfully monito
 the PUB/SUB channels. Since the only purpose of this function is to monitor, this
 should not cause any issues.
 }
-

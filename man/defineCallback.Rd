@@ -21,4 +21,3 @@ name as the subscribed channel. \code{defineCallback} takes the callback
 returned from a channel definition and assigns it to the correct function name
 so \code{redisSubscribe} can access it.
 }
-
