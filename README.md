@@ -257,3 +257,4 @@ These are things that need to be completed for v2.0.0.
 3. Update documentation.
 4. Figure out how to make redis serialization optional so it will be easier for non-R clients to send and receive messages.
 5. Add docker file and make that recommended deployment method in README, instead of the Upstart method.
+6. Update changelog.
