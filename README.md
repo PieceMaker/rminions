@@ -247,3 +247,13 @@ To manually start or stop the listener and workers, simply run the following com
 ```bash
 sudo start/stop rminions
 ```
+
+# TODO
+
+These are things that need to be completed for v2.0.0.
+
+1. Convert `minionWorker` to execute functions from packages rather than execute arbitrary function definitions.
+2. The `rredis` package is deprecated. Convert to a newer package such as `redux`, which is recommended by the creator of `rredis`.
+3. Update documentation.
+4. Figure out how to make redis serialization optional so it will be easier for non-R clients to send and receive messages.
+5. Add docker file and make that recommended deployment method in README, instead of the Upstart method.
