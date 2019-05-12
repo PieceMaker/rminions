@@ -121,16 +121,53 @@ worker. The recommended number of workers per server is the number of CPU cores 
 
 # Bundling and Pushing Jobs
 
-The workers have been written to run any task as long as it is bundled into a function. The job that is passed to the
-worker should be a list with the following keys: `Function`, `Parameters`, `ResultsQueue`, `ErrorQueue`, and optionally,
-`Packages`. The `Function` key contains the function that the worker will execute. This function should contain all the
-logic that is required for the job and it should accept one argument, denoted here as `params`, a list object. Any
-arguments the function needs should be accessed as keys in the `params` object. `Function` can return anything that a
-regular function will return. The returned value or object will be stored in the message queue identified by the
-`ResultsQueue` key. The `Parameters` key should be a list containing any arguments that `Function` needs to be executed
-with and will be passed in as `params`. `ErrorQueue` should be a message queue where any error-related information is
-stored. Finally, the `Packages` key is optional but if supplied should contain a vector of one or more strings with the
-names of packages to be loaded before executing `Function`.
+The first verson of the rminions package required anonymous function definitions to be passed to the worker. Even if
+you wanted to call a simple native R function, you still had to pass an anonyous function that wrapped the call to the
+R function. This was very archaic, tough to deal with, and introduced a lot of room for error. The new version of this
+package scraps this and now requires any function you want a worker to run to be defined in a package.
+
+## Job Definition
+
+A job requires the following four parameters: `package`, `func`, `parameters`, and `resultsQueue`. A job can also have
+the following optional parameter: `errorQueue`. `package` is the name of the package containing the function you want
+the worker to run and `func` is the name of said function. `parameters` will be addressed separately in the next
+subsection. `resultsQueue` is the queue to send results to. `errorQueue` can be defined separately if you wish for
+errors to be diverted to a different queue. If `errorQueue` is not defined, then errors will be returned to
+`resultsQueue`.
+
+### `parameters`
+
+To allow minion workers to be accessed from languages other than R, they can run to accept parameters in two formats:
+R lists and JSON. Currently a worker can accept one or the other, not both. This choice is made by setting the `useJSON`
+flag at worker startup.
+
+If `useJSON` is false, then `parameters` should be a named list where the entries match the parameters of `func`. For
+example, if we want a worker to calculate the 0, 0.25, 0.50, 0.75, and 1 quantiles for a normal distribution with a
+mean of 100 and standard deviation of 10, the following would be passed as `parameters`:
+
+```R
+list(
+    q = c(0, 0.25, 0.5, 0.75, 1),
+    mean = 100,
+    sd = 10
+)
+```
+
+If `useJSON` is true, then `parameters` should be a named JSON object, again where the entries match the parameters of
+`func`. The following would be the `parameters` for the previous example:
+
+```javascript
+{
+    "q": [0, 0.25, 0.5, 0.75, 1],
+    "mean": 100,
+    "sd": 10
+}
+```
+
+Due to the serialization that rredis performs when pushing to and popping from queues, R data types can be passed in
+the `parameters` list when `useJSON` is false, but only string and numeric types can be used when `useJSON` is true. 
+
+Results will be
 
 For complex jobs that require calls to multiple custom functions, it is recommended you bundle them into a package and
 have a controller function which contains the logic that would usually be placed in a script. This controller function
