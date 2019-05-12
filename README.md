@@ -2,8 +2,6 @@
 
 `rminions` is a package that provides functions to assist in setting up an environment for quickly running jobs across any number of servers. This is accomplished by having a central control server which is in charge of accepting jobs and distributing them among workers. The passing of jobs and results is handled via Redis message queues.
 
-This package also contains functions to allow R-level server maintenance on all servers simultaneously. This is accomplished via the Redis PUB/SUB system.
-
 ## Installation
 
 In order to install the `rminions` package you will first need to install the `devtools` package.
@@ -70,63 +68,6 @@ redisClose(conn)
 
 If the result of your `redisRPop` command was to print the list you pushed, then your server is now working.
 
-# PUB/SUB Server Maintenance
-
-Unlike message queues, which run on a first-come-first-served basis, Redis has a publish/subscribe (PUB/SUB) system available. Whenever a message is published on a channel, any Redis connection that is subscribed to the channel receives the published message. A connection can be subscribed to any number of channels. Since the PUB/SUB messages can be received by any number of connections, this system has been used to allow R-level server maintenance among all connected (and listening) servers simultaneously. The `minionListener` function has been included in the package for this express purpose.
-
-The `minionListener` is written with the idea that each type of maintenance task will be published on its own channel. To subscribe to channels with the `minionListener`, you need to pass in a function defining a channel and how to handle messages when they are received. This handling definition is a function known as a callback and it will be executed with the published message as the input parameter any time a message is broadcast. The `rminions` package comes with three predefined channel functions, all for installing packages on the servers. These are: `cranPackageChannel()`, `gitHubPackageChannel()`, and `gitPackageChannel()`.
-
-To define a custom channel, you need to define a function that takes a channel name to subscribe to and a channel name where errors will be published. The first part of the function should then define the callback function that handles the contents of the received message. If you wish to publish errors that occur, then you should put a `tryCatch` in your callback and, on error, run a function similar to the following:
-
-```R
-    error = function(e) {
-        e <- sprintf("An error occurred processing job on channel '%s' on listener for server '%s': %s",
-            channel,
-            listenerHost,
-            e
-        )
-        rredis::redisSetContext(outputConn)
-        rredis::redisPublish(errorChannel, e)
-        rredis::redisSetContext(subscribeConn)
-    }
-```
-
-Redis does not allow both publishing and subscribing on the same channel. Thus, the listener creates two connections and they must be switched in order to publish and then switched again in order to continue monitoring the subscribed channel. Currently `outputConn` and `subscribeConn` have been placed in the global environment and will be accessible as long as the channel definition function is being run as part of the `minionListener`. It is a goal for the near future to get away from using the global environment for connection management and instead pass connections as arguments to the channel definition functions.
-
-Once you have all the channel definition functions you need, you can run the listener. The following example starts the listener and subscribes to the CRAN and GitHub package installation channels.
-
-```R
-library(rminions)
-minionListener(host = "Gru-svr", channels = list(cranPackageChannel(), gitHubPackageChannel()))
-```
-
-Once the listener is running it will block the running process so it is recommended that you background the process or create an Upstart job to begin the listener in your working environment.
-
-To test server maintenance using this system, run the following in a new R process, preferably on a computer or server that is not running the minion listener. This example will install the `data.table` package from CRAN.
-
-```R
-library(rredis)
-conn <- redisConnect("Gru-svr", returnRef = T)
-redisPublish("cranPackage", jsonlite::serializeJSON(list(packageName = "data.table")))
-redisClose(conn)
-```
-
-You should see install information in the process running the listener and in the listener log file.
-
-If you wish to monitor any errors that occur while handling published messages, subscribe to the error channel(s) that were used in the channel definitions. The following will monitor the default error channel.
-
-```R
-library(rredis)
-conn <- redisConnect("Gru-svr", returnRef = T)
-errorChannel <- function(message) {
-    print(message)
-}
-redisSubscribe("errorChannel")
-while(1) {
-    redisMonitorChannels()
-}
-```
-
 # Minion Workers
 
 The core of this system is the workers. Each worker connects to a message queue and then waits until a job is ready to be processed. When it receives a job, it processes it and pushes the results to the provided results queue. It then connects back to the jobs queue and waits to receive another job to begin the cycle again. Whenever a job is started, the message it received is also saved in a queue unique to the worker to provide the ability to recover in the event that the worker goes down in the middle of processing. Recovery functionality has not been added at this time.
@@ -169,84 +110,6 @@ alplyQueueJobs(
 ```
 
 In this example, `buildMoonSimJobsList` generates distributional parameters and returns the job lists that `alplyQueueJobs` will queue. The workers then pick up these jobs and execute `stealTheMoonSim` with the parameters generated in `buildMoonSimJobsList`.
-
-# Upstart
-
-As was mentioned earlier in the README, Upstart can be used to automatically launch workers whenever a server is brought online. Below are some sample scripts that start one listener and ten workers on the server. The directories have been placed as comments at the top of each script for illustrative purposes only and may be changed for your implementation.
-
-```bash
-# /etc/init/rminions.conf
-
-description "Spawn R minion workers and listener"
- 
-start on filesystem and static-network-up
- 
-pre-start script
-    for inst in $(seq 10)
-    do
-        start minion-worker id=$inst
-    done
- 
-    start minion-listener id=1
-end script
- 
-post-stop script
-    for inst in $(initctl list | grep "^minion-worker " | awk '{print $2}' | tr -d ')' | tr -d '(')
-    do
-        stop minion-worker id=$inst
-    done
- 
-    stop minion-listener id=1
-end script
-```
-
-```bash
-# /etc/init/minion-listener.conf
-
-description "R Minion Listener"
- 
-instance $id
- 
-console log
- 
-respawn
-exec start-stop-daemon --start --make-pidfile --pidfile /run/minionListener$id.pid --exec /usr/bin/R CMD BATCH /usr/local/lib/R/site-library/launchMinionListener.R /var/log/rminions/minionListener$id.log
-```
-
-```bash
-# /etc/init/minion-worker.conf
-
-description "R Minion Worker"
- 
-instance $id
- 
-console log
- 
-respawn
-exec start-stop-daemon --start --make-pidfile --pidfile /run/minionWorker$id.pid --exec /usr/bin/R CMD BATCH /usr/local/lib/R/site-library/launchMinionWorker.R /var/log/rminions/minionWorker$id.log
-```
-
-```R
-# /usr/local/lib/R/site-library/launchMinionListener.R
-
-library(rminions)
-
-minionListener(host = "Gru-svr", channels = list(cranPackageChannel(), gitHubPackageChannel(), gitPackageChannel()))
-```
-
-```R
-# /usr/local/lib/R/site-library/launchMinionWorker.R
-
-library(rminions)
- 
-minionWorker(host = "Gru-svr")
-```
-
-To manually start or stop the listener and workers, simply run the following command (choosing one of start or stop):
-
-```bash
-sudo start/stop rminions
-```
 
 # TODO
 
