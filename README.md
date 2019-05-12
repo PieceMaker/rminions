@@ -21,11 +21,34 @@ devtools::install_github("PieceMaker/rminions")
 ## Central Server Setup
 
 The central server must have a working [Redis](http://redis.io/) server running that has the ability to accept incoming
-connections. It is highly recommended that the server be running a version of Linux as this is the primary operating
-system supported by Redis. If desired, a build of Redis exists for [Windows](https://github.com/MSOpenTech/redis).
-However, this section will focus on getting Redis running in an Ubuntu environment.
+connections. It is highly recommended that you use the Redis Docker image for your server. This section will document
+both using a Dockerized Redis server, as well as manual setup.
   
 Note, in the rest of this document the central server will be referenced as Gru-svr.
+
+### Docker
+
+This section assumes you have Docker installed and running. If you do not, then first follow the
+[Docker installation instructions](https://docs.docker.com/install/).
+
+To pull down the latest Redis Docker image, run the following command:
+
+```bash
+docker pull redis:latest
+```
+
+Once you have the image locally, simply start your server by running the following command:
+
+```bash
+docker run -d -p 6379:6379 --restart=unless-stopped --name redis-server redis
+```
+
+### Manual Setup
+
+If you wish to manually setup your Redis server, it is highly recommended that the server be running a version of Linux
+as this is the primary operating system supported by Redis. If desired, a build of Redis exists for
+[Windows](https://github.com/MSOpenTech/redis). This section will focus on getting Redis running in an Ubuntu
+environment.
 
 First install Redis.
 
