@@ -135,9 +135,9 @@ subsection. `resultsQueue` is the queue to send results to. `errorQueue` can be 
 errors to be diverted to a different queue. If `errorQueue` is not defined, then errors will be returned to
 `resultsQueue`.
 
-### `parameters`
+### Parameters
 
-To allow minion workers to be accessed from languages other than R, they can run to accept parameters in two formats:
+To allow minion workers to be accessed from languages other than R, they can accept parameters in two formats:
 R lists and JSON. Currently a worker can accept one or the other, not both. This choice is made by setting the `useJSON`
 flag at worker startup.
 
@@ -165,13 +165,37 @@ If `useJSON` is true, then `parameters` should be a named JSON object, again whe
 ```
 
 Due to the serialization that rredis performs when pushing to and popping from queues, R data types can be passed in
-the `parameters` list when `useJSON` is false, but only string and numeric types can be used when `useJSON` is true. 
+the `parameters` list when `useJSON` is false, but only string and numeric types can be used when `useJSON` is true.
 
-Results will be
+## Results Messages
 
-For complex jobs that require calls to multiple custom functions, it is recommended you bundle them into a package and
-have a controller function which contains the logic that would usually be placed in a script. This controller function
-is what will be passed to the workers.
+Results messages will have all of the properties that were passed in the original job definition. They will also have
+the `status` property and will have either the `results` or the `error` property, depending on the status.
+
+### Status
+
+`status` will be one of three strings: "succeeded", "failed", or "catastrophic".
+
+#### Succeeded
+
+If `status` is "succeeded", then the job ran successfully and the results of the function execution are stored in the
+response in the `results` key.
+
+#### Failed
+
+If `status` is "failed", then either there was an error validating the job or there was an error executing the
+requested function. Refer to the `error` key of the response message for more information.
+
+#### Catastrophic
+
+If `status` is "catastrophic", then an error somehow got through the first set of error handling built into the minion
+worker. See `error` key of the response message for more information. Due to their unexpected nature, jobs resulting
+in a catastrophic status will not be placed in either `resultsQueue` or `errorQueue`, but rather a special queue
+called "unhandledErrors".
+
+Note, if you receive a "catastrophic" status, please open an issue as this may be indicative of a bug in the package.
+
+## Helper Functions
 
 Since this package was developed to satisfy a need to replicate jobs numerous times, several helper functions have been
 provided to assist in quickly pushing multiple jobs to a queue. These are the `*lplyQueueJobs` functions, where `*` is
