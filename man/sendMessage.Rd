@@ -5,10 +5,11 @@
 \title{A function that takes the required information for a job and sends it to the queue.}
 \usage{
 sendMessage(conn, jobsQueue = "jobsQueue", package, func, parameters,
-  resultsQueue = "resultsQueue", errorQueue = "errorQueue", useJSON = F)
+  resultsQueue = "resultsQueue", errorQueue = "errorQueue",
+  useJSON = F)
 }
 \arguments{
-\item{conn}{An open redis connection.}
+\item{conn}{An open redux hiredis connection.}
 
 \item{jobsQueue}{A string giving the name of the queue where jobs will be placed.
 Defaults to \code{jobsqueue}.}

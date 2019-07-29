@@ -24,11 +24,11 @@
 #' "catastrophic", so \code{errorQueue} can match \code{resultsQueue} and you can separate
 #' message types by checking their status.
 #'
-#' @import rredis jsonlite
+#' @import redux jsonlite
 #'
 #' @export
 #'
-#' @param conn An open redis connection.
+#' @param conn An open redux hiredis connection.
 #' @param jobsQueue A string giving the name of the queue where jobs will be placed.
 #'   Defaults to \code{jobsqueue}.
 #' @param package A string giving the name of the package containing the function to execute.
@@ -52,7 +52,8 @@ sendMessage <- function(conn, jobsQueue = "jobsQueue", package, func, parameters
     )
     if(useJSON) {
         job <- jsonlite::toJSON(job)
+    } else {
+        job <- redux::object_to_bin(job)
     }
-    rredis::redisSetContext(conn)
-    rredis::redisRPush(jobsQueue, job)
+    conn$RPUSH(jobsQueue, job)
 }

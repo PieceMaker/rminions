@@ -1,4 +1,4 @@
-result <- list(
+resultList <- list(
   package = 'myPackage',
   func = 'myFunction',
   parameters = list(
@@ -9,16 +9,18 @@ result <- list(
   resultsQueue = 'myResultsQueue',
   errorQueue = 'myErrorQueue'
 )
+resultJSON <- as.character(
+  jsonlite::toJSON(resultList)
+)
 
 test_that('messages can be sent and are of appropriate structure using internal serialization', {
   skipIfNoRedis()
   reduxConn <- testReduxConnection()
-  rredisConn <- testRRedisConnection()
   
   cleanQueue(reduxConn, 'testThatQueue')
   
   sendMessage(
-    rredisConn,
+    reduxConn,
     jobsQueue = 'testThatQueue',
     package = 'myPackage',
     func = 'myFunction',
@@ -31,24 +33,22 @@ test_that('messages can be sent and are of appropriate structure using internal 
     errorQueue = 'myErrorQueue',
     useJSON = F
   )
-  message <- redisRPop('testThatQueue')
+  binaryMessage <- reduxConn$RPOP('testThatQueue')
+  message <- redux::bin_to_object(binaryMessage)
   expect_true(identical(
     message,
-    result
+    resultList
   ))
-  
-  redisClose(rredisConn)
 })
 
 test_that('messages can be sent and are of appropriate structure using JSON', {
   skipIfNoRedis()
   reduxConn <- testReduxConnection()
-  rredisConn <- testRRedisConnection()
   
   cleanQueue(reduxConn, 'testThatQueue')
   
   sendMessage(
-    rredisConn,
+    reduxConn,
     jobsQueue = 'testThatQueue',
     package = 'myPackage',
     func = 'myFunction',
@@ -61,11 +61,9 @@ test_that('messages can be sent and are of appropriate structure using JSON', {
     errorQueue = 'myErrorQueue',
     useJSON = T
   )
-  message <- redisRPop('testThatQueue')
+  message <- reduxConn$RPOP('testThatQueue')
   expect_equal(
     message,
-    jsonlite::toJSON(result)
+    resultJSON
   )
-  
-  redisClose(rredisConn)
 })
