@@ -3,6 +3,7 @@
 export(alplyQueueJobs)
 export(buildJobsList)
 export(dlplyQueueJobs)
+export(getMessage)
 export(llplyQueueJobs)
 export(minionWorker)
 export(sendMessage)
