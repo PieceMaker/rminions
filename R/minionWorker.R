@@ -81,28 +81,21 @@ minionWorker <- function(host, port = 6379, jobsQueue = "jobsQueue", logLevel = 
             port
         )
     )
-    tryCatch(
-        {
-            conn <- rredis::redisConnect(host = host, port = port, returnRef = T)
-        },
-        error = function(e) {
-            Rbunyan::bunyanLog.error(
-                sprintf(
-                    "An error occurred while connecting to Redis server: %s",
-                    e
-                )
+    if(!redux::redis_available(host = host, port = port)) {
+        Rbunyan::bunyanLog.error(
+            sprintf(
+                "Redis server unavailable at %s:%s",
+                host,
+                port
             )
-            stop(e)
-        }
-    )
+        )
+    }
+    conn <- redux::hiredis(host = host, port = port)
 
     while(1) {
         tryCatch(
             {
-                job <- rredis::redisBRPopLPush(jobsQueue, workerID)
-                if(useJSON) {
-                    job <- jsonlite::fromJSON(job)
-                }
+                job <- getMessage(conn, jobsQueue, useJSON = useJSON, blocking = T)
                 package <- job$package
                 func <- job$func
                 params <- job$parameters
@@ -113,47 +106,43 @@ minionWorker <- function(host, port = 6379, jobsQueue = "jobsQueue", logLevel = 
                 }
                 if(is.null(resultsQueue)) {
                     Rbunyan::bunyanLog.error('"resultsQueue" not provided.')
-                    job$error <- '"resultsQueue" not provided.'
-                    job$status <- "failed"
-                    if(useJSON) {
-                        job <- jsonlite::toJSON(job)
-                    }
-                    rredis::redisRPush(
-                        "missingResultsQueueErrors",
-                        job
+                    sendResponse(
+                        conn = conn,
+                        queue = 'missingResultsQueueErrors',
+                        status = 'failed',
+                        job = job,
+                        response = '"resultsQueue" not provided.',
+                        useJSON = useJSON
                     )
                 } else if(is.null(package)) {
                     Rbunyan::bunyanLog.error('"package" not provided.')
-                    job$error <- '"package" not provided.'
-                    job$status <- "failed"
-                    if(useJSON) {
-                        job <- jsonlite::toJSON(job)
-                    }
-                    rredis::redisRPush(
-                        "errorQueue",
-                        job
+                    sendResponse(
+                        conn = conn,
+                        queue = errorQueue,
+                        status = 'failed',
+                        job = job,
+                        response = '"package" not provided.',
+                        useJSON = useJSON
                     )
                 } else if(is.null(func)) {
                     Rbunyan::bunyanLog.error('"func" not provided.')
-                    job$error <- '"func" not provided.'
-                    job$status <- "failed"
-                    if(useJSON) {
-                        job <- jsonlite::toJSON(job)
-                    }
-                    rredis::redisRPush(
-                        "errorQueue",
-                        job
+                    sendResponse(
+                        conn = conn,
+                        queue = errorQueue,
+                        status = 'failed',
+                        job = job,
+                        response = '"func" not provided.',
+                        useJSON = useJSON
                     )
                 } else if(is.null(params)) {
                     Rbunyan::bunyanLog.error('"params" not provided.')
-                    job$error <- '"params" not provided.'
-                    job$status <- "failed"
-                    if(useJSON) {
-                        job <- jsonlite::toJSON(job)
-                    }
-                    rredis::redisRPush(
-                        "errorQueue",
-                        job
+                    sendResponse(
+                        conn = conn,
+                        queue = errorQueue,
+                        status = 'failed',
+                        job = job,
+                        response = '"params" not provided.',
+                        useJSON = useJSON
                     )
                 } else {
                     tryCatch(
@@ -161,15 +150,15 @@ minionWorker <- function(host, port = 6379, jobsQueue = "jobsQueue", logLevel = 
                             func <- getFromNamespace(func, ns = package)
                             # TODO: Try to make the below call safer
                             results <- do.call(func, params)
-                            job$results <- results
-                            job$status <- "succeeded"
+                            debugJob <- job
+                            debugJob$results <- results
+                            debugJob$status <- "succeeded"
                             if(useJSON) {
-                                job <- jsonlite::toJSON(job)
                                 Rbunyan::bunyanLog.debug(
                                     sprintf(
                                         "Sending results to queue %s: %s",
                                         resultsQueue,
-                                        job
+                                        jsonlite::toJSON(debugJob)
                                     )
                                 )
                             } else {
@@ -177,11 +166,18 @@ minionWorker <- function(host, port = 6379, jobsQueue = "jobsQueue", logLevel = 
                                     sprintf(
                                         "Sending results to queue %s: %s",
                                         resultsQueue,
-                                        jsonlite::serializeJSON(job)
+                                        jsonlite::serializeJSON(debugJob)
                                     )
                                 )
                             }
-                            rredis::redisRPush(resultsQueue, job)
+                            sendResponse(
+                                conn = conn,
+                                queue = errorQueue,
+                                status = 'succeeded',
+                                job = job,
+                                response = results,
+                                useJSON = useJSON
+                            )
                         },
                         error = function(e) {
                             Rbunyan::bunyanLog.error(
@@ -192,15 +188,17 @@ minionWorker <- function(host, port = 6379, jobsQueue = "jobsQueue", logLevel = 
                                     e
                                 )
                             )
-                            job$error <- e
-                            job$status <- "failed"
-                            if(useJSON) {
-                                job <- jsonlite::toJSON(job)
-                            }
-                            rredis::redisRPush(errorQueue, job)
+                            sendResponse(
+                                conn = conn,
+                                queue = errorQueue,
+                                status = 'failed',
+                                job = job,
+                                response = e,
+                                useJSON = useJSON
+                            )
                         },
                         finally = {
-                            rredis::redisDelete(workerID)
+                            conn$DEL(workerID)
                         }
                     )
                 }
@@ -213,18 +211,28 @@ minionWorker <- function(host, port = 6379, jobsQueue = "jobsQueue", logLevel = 
                     )
                 )
                 if(is.list(job)) {
-                    job$error <- e
-                    job$status <- "catastrophic"
-                    if(useJSON) {
-                        job <- jsonlite::toJSON(job)
-                    }
                     if(is.null(job$errorQueue)) {
-                        rredis::redisRPush('unhandledErrors', job)
+                        errorQueue <- 'unhandledErrors'
                     } else {
-                        rredis::redisRPush(job$errorQueue, job)
+                        errorQueue <- job$errorQueue
                     }
+                    sendResponse(
+                        conn = conn,
+                        queue = errorQueue,
+                        status = 'catastrophic',
+                        job = job,
+                        response = e,
+                        useJSON = useJSON
+                    )
                 } else {
-                    rredis::redisRPush('unhandledErrors', e)
+                    sendResponse(
+                        conn = conn,
+                        queue = 'unhandledErrors',
+                        status = 'catastrophic',
+                        job = list(),
+                        response = e,
+                        useJSON = useJSON
+                    )
                 }
             }
         )
