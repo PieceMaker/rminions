@@ -11,9 +11,15 @@
 #' @param conn An open redux hiredis connection.
 #' @param queue A string giving the name of the queue to get the message from.
 #' @param useJSON Flag specifying whether messages are in JSON format. Defaults to false.
+#' @param blocking Flag specifying whether a blocking pop or regular pop will be performed
+#'   when getting a message from the queue.
 
-getMessage <- function(conn, queue, useJSON = F) {
-    message <- conn$RPOP(queue)
+getMessage <- function(conn, queue, useJSON = F, blocking = F) {
+    if(blocking) {
+        message <- conn$BRPOP(queue)
+    } else {
+        message <- conn$RPOP(queue)
+    }
     if(useJSON) {
         message <- jsonlite::fromJSON(message)
     } else {
