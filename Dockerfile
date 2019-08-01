@@ -11,6 +11,7 @@ RUN apt-get update \
         libssh2-1-dev\
         libxml2-dev \
         libgit2-dev \
+        libhiredis-dev \
     && rm -rf /var/lib/apt/lists/*
 
 RUN mkdir -p /R
