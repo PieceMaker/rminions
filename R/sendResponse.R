@@ -25,6 +25,7 @@
 
 sendResponse <- function(conn, queue, status = c('succeeded', 'failed', 'catastrophic'), job,
     response, useJSON = F) {
+    status <- match.arg(status)
     job$status <- status
     if(status == 'succeeded') {
         job$results <- response
