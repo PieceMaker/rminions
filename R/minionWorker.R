@@ -56,7 +56,8 @@
 #    to true and make sure jobs are defined in the JSON format and the function being executed does not require
 #    any R-specific objects.
 
-minionWorker <- function(host, port = 6379, jobsQueue = "jobsQueue", logLevel = 'DEBUG', logFileDir = "stdout", useJSON = F) {
+minionWorker <- function(host, port = 6379, jobsQueue = "jobsQueue", logLevel = 'DEBUG', logFileDir = "stdout",
+useJSON = F) {
     workerHost <- as.character(R.utils::System$getHostname())
     workerID <- paste0(workerHost, '-worker-', Sys.getpid())
     if(logFileDir == 'stdout') {

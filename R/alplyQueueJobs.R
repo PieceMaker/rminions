@@ -29,7 +29,8 @@
 #' @param jobsQueue A string giving the name of the queue where jobs will be placed.
 #'   Defaults to \code{jobsqueue}.
 
-alplyQueueJobs <- function(host, iter, margins, func, ..., resultsQueue, errorQueue, buildJobsList = buildJobsList, port = 6379, jobsQueue = "jobsqueue") {
+alplyQueueJobs <- function(host, iter, margins, func, ..., resultsQueue, errorQueue, buildJobsList = buildJobsList,
+port = 6379, jobsQueue = "jobsqueue") {
     upload <- plyr::alply(
         .data = iter,
         .margins = margins,
