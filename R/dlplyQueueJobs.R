@@ -26,7 +26,8 @@
 #' @param jobsQueue A string giving the name of the queue where jobs will be placed.
 #'   Defaults to \code{jobsqueue}.
 
-dlplyQueueJobs <- function(host, iter, variables, func, ..., resultsQueue, errorQueue, buildJobsList = buildJobsList, port = 6379, jobsQueue = "jobsqueue") {
+dlplyQueueJobs <- function(host, iter, variables, func, ..., resultsQueue, errorQueue, buildJobsList = buildJobsList,
+port = 6379, jobsQueue = "jobsqueue") {
     upload <- plyr::dlply(
         .data = iter,
         .variables = variables,

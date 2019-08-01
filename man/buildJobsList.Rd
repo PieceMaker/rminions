@@ -25,4 +25,3 @@ If the job you wish to run requires significant setup to define a job, it may be
 to write a custom function to handle the construction of a job. This job can be passed
 in place of \code{buildJobsList} in the \code{queueJobs} function.
 }
-

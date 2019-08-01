@@ -1,8 +1,8 @@
 # rminions
 
-`rminions` is a package that provides functions to assist in setting up an environment for quickly running jobs across any number of servers. This is accomplished by having a central control server which is in charge of accepting jobs and distributing them among workers. The passing of jobs and results is handled via Redis message queues.
-
-This package also contains functions to allow R-level server maintenance on all servers simultaneously. This is accomplished via the Redis PUB/SUB system.
+`rminions` is a package that provides functions to assist in setting up an environment for quickly running jobs across
+any number of servers. This is accomplished by having a central control server which is in charge of accepting jobs and
+distributing them among workers. The passing of jobs and results is handled via Redis message queues.
 
 ## Installation
 
@@ -20,9 +20,35 @@ devtools::install_github("PieceMaker/rminions")
 
 ## Central Server Setup
 
-The central server must have a working [Redis](http://redis.io/) server running that has the ability to accept incoming connections. It is highly recommended that the server be running a version of Linux as this is the primary operating system supported by Redis. If desired, a build of Redis exists for [Windows](https://github.com/MSOpenTech/redis). However, this section will focus on getting Redis running in an Ubuntu environment.
+The central server must have a working [Redis](http://redis.io/) server running that has the ability to accept incoming
+connections. It is highly recommended that you use the Redis Docker image for your server. This section will document
+both using a Dockerized Redis server, as well as manual setup.
   
 Note, in the rest of this document the central server will be referenced as Gru-svr.
+
+### Docker
+
+This section assumes you have Docker installed and running. If you do not, then first follow the
+[Docker installation instructions](https://docs.docker.com/install/).
+
+To pull down the latest Redis Docker image, run the following command:
+
+```bash
+docker pull redis:latest
+```
+
+Once you have the image locally, simply start your server by running the following command:
+
+```bash
+docker run -d -p 6379:6379 --restart=unless-stopped --name redis-server redis
+```
+
+### Manual Setup
+
+If you wish to manually setup your Redis server, it is highly recommended that the server be running a version of Linux
+as this is the primary operating system supported by Redis. If desired, a build of Redis exists for
+[Windows](https://github.com/MSOpenTech/redis). This section will focus on getting Redis running in an Ubuntu
+environment.
 
 First install Redis.
 
@@ -30,7 +56,8 @@ First install Redis.
 sudo apt-get install redis-server
 ```
 
-Once Redis is installed, it will likely only accept connections originating from the localhost. To change this you need to edit the Redis config file located at `/etc/redis/redis.conf`. Navigate to the section that is summarized below:
+Once Redis is installed, it will likely only accept connections originating from the localhost. To change this you need
+to edit the Redis config file located at `/etc/redis/redis.conf`. Navigate to the section that is summarized below:
 
 ```
 # By default Redis listens for connections for all the network interfaces
@@ -42,7 +69,8 @@ Once Redis is installed, it will likely only accept connections originating from
 bind 127.0.0.1
 ```
 
-If you are willing to accept connections originating from all addresses, simply comment out the last line. If you have special requirements for addresses, add a new bind line and specify whatever rules you desire.
+If you are willing to accept connections originating from all addresses, simply comment out the last line. If you have
+special requirements for addresses, add a new bind line and specify whatever rules you desire.
 
 Once you have finished updating the IP address rules, save the file and restart the Redis service.
 
@@ -50,7 +78,8 @@ Once you have finished updating the IP address rules, save the file and restart 
 sudo service redis-server restart
 ```
 
-To test whether you can access your new Redis server from R, open a new R session from any computer that has network access to Gru-svr and run the following test:
+To test whether you can access your new Redis server from R, open a new R session from any computer that has network
+access to Gru-svr and run the following test:
 
 ```R
 library(rredis)
@@ -70,83 +99,111 @@ redisClose(conn)
 
 If the result of your `redisRPop` command was to print the list you pushed, then your server is now working.
 
-# PUB/SUB Server Maintenance
-
-Unlike message queues, which run on a first-come-first-served basis, Redis has a publish/subscribe (PUB/SUB) system available. Whenever a message is published on a channel, any Redis connection that is subscribed to the channel receives the published message. A connection can be subscribed to any number of channels. Since the PUB/SUB messages can be received by any number of connections, this system has been used to allow R-level server maintenance among all connected (and listening) servers simultaneously. The `minionListener` function has been included in the package for this express purpose.
-
-The `minionListener` is written with the idea that each type of maintenance task will be published on its own channel. To subscribe to channels with the `minionListener`, you need to pass in a function defining a channel and how to handle messages when they are received. This handling definition is a function known as a callback and it will be executed with the published message as the input parameter any time a message is broadcast. The `rminions` package comes with three predefined channel functions, all for installing packages on the servers. These are: `cranPackageChannel()`, `gitHubPackageChannel()`, and `gitPackageChannel()`.
-
-To define a custom channel, you need to define a function that takes a channel name to subscribe to and a channel name where errors will be published. The first part of the function should then define the callback function that handles the contents of the received message. If you wish to publish errors that occur, then you should put a `tryCatch` in your callback and, on error, run a function similar to the following:
-
-```R
-    error = function(e) {
-        e <- sprintf("An error occurred processing job on channel '%s' on listener for server '%s': %s",
-            channel,
-            listenerHost,
-            e
-        )
-        rredis::redisSetContext(outputConn)
-        rredis::redisPublish(errorChannel, e)
-        rredis::redisSetContext(subscribeConn)
-    }
-```
-
-Redis does not allow both publishing and subscribing on the same channel. Thus, the listener creates two connections and they must be switched in order to publish and then switched again in order to continue monitoring the subscribed channel. Currently `outputConn` and `subscribeConn` have been placed in the global environment and will be accessible as long as the channel definition function is being run as part of the `minionListener`. It is a goal for the near future to get away from using the global environment for connection management and instead pass connections as arguments to the channel definition functions.
-
-Once you have all the channel definition functions you need, you can run the listener. The following example starts the listener and subscribes to the CRAN and GitHub package installation channels.
-
-```R
-library(rminions)
-minionListener(host = "Gru-svr", channels = list(cranPackageChannel(), gitHubPackageChannel()))
-```
-
-Once the listener is running it will block the running process so it is recommended that you background the process or create an Upstart job to begin the listener in your working environment.
-
-To test server maintenance using this system, run the following in a new R process, preferably on a computer or server that is not running the minion listener. This example will install the `data.table` package from CRAN.
-
-```R
-library(rredis)
-conn <- redisConnect("Gru-svr", returnRef = T)
-redisPublish("cranPackage", jsonlite::serializeJSON(list(packageName = "data.table")))
-redisClose(conn)
-```
-
-You should see install information in the process running the listener and in the listener log file.
-
-If you wish to monitor any errors that occur while handling published messages, subscribe to the error channel(s) that were used in the channel definitions. The following will monitor the default error channel.
-
-```R
-library(rredis)
-conn <- redisConnect("Gru-svr", returnRef = T)
-errorChannel <- function(message) {
-    print(message)
-}
-redisSubscribe("errorChannel")
-while(1) {
-    redisMonitorChannels()
-}
-```
-
 # Minion Workers
 
-The core of this system is the workers. Each worker connects to a message queue and then waits until a job is ready to be processed. When it receives a job, it processes it and pushes the results to the provided results queue. It then connects back to the jobs queue and waits to receive another job to begin the cycle again. Whenever a job is started, the message it received is also saved in a queue unique to the worker to provide the ability to recover in the event that the worker goes down in the middle of processing. Recovery functionality has not been added at this time.
+The core of this system is the workers. Each worker connects to a message queue and then waits until a job is ready to
+be processed. When it receives a job, it processes it and pushes the results to the provided results queue. It then
+connects back to the jobs queue and waits to receive another job to begin the cycle again. Whenever a job is started,
+the message it received is also saved in a queue unique to the worker to provide the ability to recover in the event
+that the worker goes down in the middle of processing. Recovery functionality has not been added at this time.
 
-To start a worker on a server, make sure the server can connect to the central Redis server. Then simply run the following command.
+To start a worker on a server, make sure the server can connect to the central Redis server. Then simply run the
+following command.
 
 ```R
 library(rminions)
 minionWorker(host = "Gru-svr")
 ```
 
-This will connect to the central Redis server and wait for jobs to be pushed to the default `jobsQueue`. This will block the running process so it is recommended that you background the process or create an Upstart job to begin the worker. The recommended number of workers per server is the number of CPU cores or threads plus 2.
+This will connect to the central Redis server and wait for jobs to be pushed to the default `jobsQueue`. This will
+block the running process so it is recommended that you background the process or create an Upstart job to begin the
+worker. The recommended number of workers per server is the number of CPU cores or threads plus 2.
 
 # Bundling and Pushing Jobs
 
-The workers have been written to run any task as long as it is bundled into a function. The job that is passed to the worker should be a list with the following keys: `Function`, `Parameters`, `ResultsQueue`, `ErrorQueue`, and optionally, `Packages`. The `Function` key contains the function that the worker will execute. This function should contain all the logic that is required for the job and it should accept one argument, denoted here as `params`, a list object. Any arguments the function needs should be accessed as keys in the `params` object. `Function` can return anything that a regular function will return. The returned value or object will be stored in the message queue identified by the `ResultsQueue` key. The `Parameters` key should be a list containing any arguments that `Function` needs to be executed with and will be passed in as `params`. `ErrorQueue` should be a message queue where any error-related information is stored. Finally, the `Packages` key is optional but if supplied should contain a vector of one or more strings with the names of packages to be loaded before executing `Function`.
+The first verson of the rminions package required anonymous function definitions to be passed to the worker. Even if
+you wanted to call a simple native R function, you still had to pass an anonyous function that wrapped the call to the
+R function. This was very archaic, tough to deal with, and introduced a lot of room for error. The new version of this
+package scraps this and now requires any function you want a worker to run to be defined in a package.
 
-For complex jobs that require calls to multiple custom functions, it is recommended you bundle them into a package and have a controller function which contains the logic that would usually be placed in a script. This controller function is what will be passed to the workers.
+## Job Definition
 
-Since this package was developed to satisfy a need to replicate jobs numerous times, several helper functions have been provided to assist in quickly pushing multiple jobs to a queue. These are the `*lplyQueueJobs` functions, where `*` is `a`, `d`, and `l`. These functions accept an object to be iterated over, the function for the worker to execute, the parameters it needs to run, and the response and error queue. These functions also accept a function used to build the job message in the above list format. By default they call a default builder function whose only task is to accept the inputs and return the formatted list. If you require calculations or data wrangling to arrive at the inputs to your function, then you will need to write a custom job builder function and pass it in the `buildJobsList` parameter.
+A job requires the following four parameters: `package`, `func`, `parameters`, and `resultsQueue`. A job can also have
+the following optional parameter: `errorQueue`. `package` is the name of the package containing the function you want
+the worker to run and `func` is the name of said function. `parameters` will be addressed separately in the next
+subsection. `resultsQueue` is the queue to send results to. `errorQueue` can be defined separately if you wish for
+errors to be diverted to a different queue. If `errorQueue` is not defined, then errors will be returned to
+`resultsQueue`.
+
+### Parameters
+
+To allow minion workers to be accessed from languages other than R, they can accept parameters in two formats:
+R lists and JSON. Currently a worker can accept one or the other, not both. This choice is made by setting the `useJSON`
+flag at worker startup.
+
+If `useJSON` is false, then `parameters` should be a named list where the entries match the parameters of `func`. For
+example, if we want a worker to calculate the 0, 0.25, 0.50, 0.75, and 1 quantiles for a normal distribution with a
+mean of 100 and standard deviation of 10, the following would be passed as `parameters`:
+
+```R
+list(
+    q = c(0, 0.25, 0.5, 0.75, 1),
+    mean = 100,
+    sd = 10
+)
+```
+
+If `useJSON` is true, then `parameters` should be a named JSON object, again where the entries match the parameters of
+`func`. The following would be the `parameters` for the previous example:
+
+```javascript
+{
+    "q": [0, 0.25, 0.5, 0.75, 1],
+    "mean": 100,
+    "sd": 10
+}
+```
+
+Due to the serialization that rredis performs when pushing to and popping from queues, R data types can be passed in
+the `parameters` list when `useJSON` is false, but only string and numeric types can be used when `useJSON` is true.
+
+## Results Messages
+
+Results messages will have all of the properties that were passed in the original job definition. They will also have
+the `status` property and will have either the `results` or the `error` property, depending on the status.
+
+### Status
+
+`status` will be one of three strings: "succeeded", "failed", or "catastrophic".
+
+#### Succeeded
+
+If `status` is "succeeded", then the job ran successfully and the results of the function execution are stored in the
+response in the `results` key.
+
+#### Failed
+
+If `status` is "failed", then either there was an error validating the job or there was an error executing the
+requested function. Refer to the `error` key of the response message for more information.
+
+#### Catastrophic
+
+If `status` is "catastrophic", then an error somehow got through the first set of error handling built into the minion
+worker. See `error` key of the response message for more information. Due to their unexpected nature, jobs resulting
+in a catastrophic status will not be placed in either `resultsQueue` or `errorQueue`, but rather a special queue
+called "unhandledErrors".
+
+Note, if you receive a "catastrophic" status, please open an issue as this may be indicative of a bug in the package.
+
+## Helper Functions
+
+Since this package was developed to satisfy a need to replicate jobs numerous times, several helper functions have been
+provided to assist in quickly pushing multiple jobs to a queue. These are the `*lplyQueueJobs` functions, where `*` is
+`a`, `d`, and `l`. These functions accept an object to be iterated over, the function for the worker to execute, the
+parameters it needs to run, and the response and error queue. These functions also accept a function used to build the
+job message in the above list format. By default they call a default builder function whose only task is to accept the
+inputs and return the formatted list. If you require calculations or data wrangling to arrive at the inputs to your
+function, then you will need to write a custom job builder function and pass it in the `buildJobsList` parameter.
  
 # Steal The Moon Example
 
@@ -168,82 +225,19 @@ alplyQueueJobs(
 )
 ```
 
-In this example, `buildMoonSimJobsList` generates distributional parameters and returns the job lists that `alplyQueueJobs` will queue. The workers then pick up these jobs and execute `stealTheMoonSim` with the parameters generated in `buildMoonSimJobsList`.
+In this example, `buildMoonSimJobsList` generates distributional parameters and returns the job lists that
+`alplyQueueJobs` will queue. The workers then pick up these jobs and execute `stealTheMoonSim` with the parameters
+generated in `buildMoonSimJobsList`.
 
-# Upstart
+# TODO
 
-As was mentioned earlier in the README, Upstart can be used to automatically launch workers whenever a server is brought online. Below are some sample scripts that start one listener and ten workers on the server. The directories have been placed as comments at the top of each script for illustrative purposes only and may be changed for your implementation.
+These are things that need to be completed for v2.0.0.
 
-```bash
-# /etc/init/rminions.conf
-
-description "Spawn R minion workers and listener"
- 
-start on filesystem and static-network-up
- 
-pre-start script
-    for inst in $(seq 10)
-    do
-        start minion-worker id=$inst
-    done
- 
-    start minion-listener id=1
-end script
- 
-post-stop script
-    for inst in $(initctl list | grep "^minion-worker " | awk '{print $2}' | tr -d ')' | tr -d '(')
-    do
-        stop minion-worker id=$inst
-    done
- 
-    stop minion-listener id=1
-end script
-```
-
-```bash
-# /etc/init/minion-listener.conf
-
-description "R Minion Listener"
- 
-instance $id
- 
-console log
- 
-respawn
-exec start-stop-daemon --start --make-pidfile --pidfile /run/minionListener$id.pid --exec /usr/bin/R CMD BATCH /usr/local/lib/R/site-library/launchMinionListener.R /var/log/rminions/minionListener$id.log
-```
-
-```bash
-# /etc/init/minion-worker.conf
-
-description "R Minion Worker"
- 
-instance $id
- 
-console log
- 
-respawn
-exec start-stop-daemon --start --make-pidfile --pidfile /run/minionWorker$id.pid --exec /usr/bin/R CMD BATCH /usr/local/lib/R/site-library/launchMinionWorker.R /var/log/rminions/minionWorker$id.log
-```
-
-```R
-# /usr/local/lib/R/site-library/launchMinionListener.R
-
-library(rminions)
-
-minionListener(host = "Gru-svr", channels = list(cranPackageChannel(), gitHubPackageChannel(), gitPackageChannel()))
-```
-
-```R
-# /usr/local/lib/R/site-library/launchMinionWorker.R
-
-library(rminions)
- 
-minionWorker(host = "Gru-svr")
-```
-
-To manually start or stop the listener and workers, simply run the following command (choosing one of start or stop):
-
-```bash
-sudo start/stop rminions
-```
+1. ~~Convert `minionWorker` to execute functions from packages rather than execute arbitrary function definitions.~~
+2. The `rredis` package is deprecated. Convert to a newer package such as `redux`, which is recommended by the creator
+of `rredis`.
+3. Update documentation.
+4. ~~Figure out how to make redis serialization optional so it will be easier for non-R clients to send and receive
+messages.~~
+5. ~~Add docker file and make that recommended deployment method in README, instead of the Upstart method.~~
+6. Update changelog.

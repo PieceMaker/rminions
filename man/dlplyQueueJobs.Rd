@@ -5,7 +5,8 @@
 \title{This function constructs all jobs and adds them to the specified queue.}
 \usage{
 dlplyQueueJobs(host, iter, variables, func, ..., resultsQueue, errorQueue,
-  buildJobsList = buildJobsList, port = 6379, jobsQueue = "jobsqueue")
+  buildJobsList = buildJobsList, port = 6379,
+  jobsQueue = "jobsqueue")
 }
 \arguments{
 \item{host}{The name or ip address of the redis server.}
@@ -41,4 +42,3 @@ pushes them to the specified queue.
 \code{iter} is a data frame to iterate over. Use \code{variables} to
 specify how to split it.
 }
-

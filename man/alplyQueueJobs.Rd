@@ -5,7 +5,8 @@
 \title{This function constructs all jobs and adds them to the specified queue.}
 \usage{
 alplyQueueJobs(host, iter, margins, func, ..., resultsQueue, errorQueue,
-  buildJobsList = buildJobsList, port = 6379, jobsQueue = "jobsqueue")
+  buildJobsList = buildJobsList, port = 6379,
+  jobsQueue = "jobsqueue")
 }
 \arguments{
 \item{host}{The name or ip address of the redis server.}
@@ -44,4 +45,3 @@ also be an integer specifying how many times to repeat the job. Use the
 \code{margins} argument to specify how to split \code{iter}. If \code{iter}
 is an integer, then set \code{margins} to 1.
 }
-

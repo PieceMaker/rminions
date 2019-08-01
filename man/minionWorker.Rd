@@ -4,8 +4,8 @@
 \alias{minionWorker}
 \title{A function that watches a message queue and starts working a job when one is available.}
 \usage{
-minionWorker(host, port = 6379, jobsQueue = "jobsqueue",
-  logLevel = "DEBUG", logFileDir = "/var/log/R")
+minionWorker(host, port = 6379, jobsQueue = "jobsQueue",
+  logLevel = "DEBUG", logFileDir = "stdout", useJSON = F)
 }
 \arguments{
 \item{host}{The name or ip address of the redis server.}
@@ -13,57 +13,54 @@ minionWorker(host, port = 6379, jobsQueue = "jobsqueue",
 \item{port}{The port the redis server is running on. Defaults to 6379.}
 
 \item{jobsQueue}{A string giving the name of the queue where jobs will be placed.
-Defaults to \code{jobsqueue}.}
+Defaults to \code{jobsQueue}.}
 
 \item{logLevel}{A string, required. 'TRACE', 'DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL'.
 Level threshold required to trigger log write. You can change the level on an
 existing log.}
 
 \item{logFileDir}{A string giving the directory to store worker log files if logging is
-enabled. Defaults to \code{/var/log/R}. Set to \code{stdout} to output logs to
-standard out.}
+enabled. Defaults to \code{stdout} which outputs logs to standard out. Specify directory
+if you want logs to be written to a file. If a directory is specified, then logs will be
+saved in that directory to a file with name \code{<host>-worker-<pid>.log}.}
+
+\item{useJSON}{Flag specifying whether jobs and results will be sent in JSON format. Defaults to false}
 }
 \description{
 \code{minionWorker} is a blocking function that will completely block the R instance
 running it. It immediately performs some housekeeping by gathering logging information
 and connecting to the message queue. Once connected, it performs a blocking pop on the
-\code{jobsqueue} and waits until it receives a bundled job message. Once a message is
-received, it runs the bundled function with the bundled parameters and stores any
-returned results in the bundled response key.
+\code{jobsQueue} and waits until it receives a bundled job message. Once a message is
+received, it pulls the specified function for the specified package and runs it with
+the bundled parameters and stores any returned results in the bundled response key.
 }
 \details{
-\code{minionWorker} is the core of the \code{redis-minions} package and multiple R
+\code{minionWorker} is the core of the \code{rminions} package and multiple R
 processes running this function should be spawned. The goal is to spawn just enough
 workers that the full cpu resources of the system running them are maxed out when under
 full jobs load. A good rule of thumb is that you should have \code{number of cores + 2}
 workers running on a system.
 
 The minion worker is constructed to work with nearly all tasks. In order to accomplish
-this, job messages need to be of a specific format. Job message must be lists with three
-keys: \code{Function}, \code{Parameters}, \code{ResultsQueue}, \code{ErrorQueue}, and
-optionally \code{Packages}.
+this, job messages need to be of a specific format. Job message must be lists with the
+following keys: \code{package}, \code{func}, \code{parameters}, \code{resultsQueue},
+and optionally, \code{errorQueue}.
 
-\code{Function} is the main function that controls the job and holds the core logic. Even
-if the desired job is a simple script, the script should be wrapped in a function which
-can then be passed to the worker. For more complex jobs that call subfunctions, it is
-recommended that you create a package with these subfunctions and have \code{Function}
-load this package. If \code{Function} must take input paremeters, define it as as a
-function of one parameter (here referenced as \code{Parameters}), i.e.
-\code{func(Parameters)}. Parameters will be a list and every desired parameter will be
-a key.
+\code{package} is the name of the package containing the function that will be executed.
 
-\code{Parameters} is a list of all the parameters to be passed to \code{Function}.
+\code{func} is the name of the function, contained in the specified package, that you
+wish to execute with this request. If \code{useJSON} is false, \code{func} can take any
+type of parameter. If \code{useJSON} is true, then \code{func} should only take R data
+as parameters that can be converted to and from JSON, i.e. strings, numbers, simple vectors,
+etc.
 
-\code{ResultsQueue} will be a string with the name of the redis queue to store any
-returned results in.
+\code{parameters} is a named list of all the parameters to be passed to \code{func}. The
+names must match those of the parameters \code{func} expects.
 
-\code{ErrorQueue} will be a string with the name of the redis queue to store any errors
-thrown while running the job.
+\code{resultsQueue} is required and will be a string with the name of the redis queue to
+store any returned results in. If not provided, an error will be returned in the queue
+"missingResultsQueueErrors".
 
-\code{Packages} is an optional key. This accepts a vector of string(s) containing the
-name(s) of any package(s) that need to be loaded before running \code{Function}. This
-will typically be used whenever the function to be run has been bundled into a package
-and you need to load it beforehand. The package(s) will be unloaded after \code{Function}
-has finished running to help prevent memory issues.
+\code{errorQueue} will be a string with the name of the redis queue to store any errors
+thrown while running the job. If not specified, it will default to \code{resultsQueue}.
 }
-

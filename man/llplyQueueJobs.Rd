@@ -5,7 +5,8 @@
 \title{This function constructs all jobs and adds them to the specified queue.}
 \usage{
 llplyQueueJobs(host, iter, func, ..., resultsQueue, errorQueue,
-  buildJobsList = buildJobsList, port = 6379, jobsQueue = "jobsqueue")
+  buildJobsList = buildJobsList, port = 6379,
+  jobsQueue = "jobsqueue")
 }
 \arguments{
 \item{host}{The name or ip address of the redis server.}
@@ -40,4 +41,3 @@ pushes them to the specified queue.
 \details{
 \code{iter} is a list to iterate over.
 }
-
