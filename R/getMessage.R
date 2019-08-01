@@ -16,7 +16,7 @@
 
 getMessage <- function(conn, queue, useJSON = F, blocking = F) {
     if(blocking) {
-        message <- conn$BRPOP(queue)
+        message <- conn$BRPOP(queue, 0)[2][[1]]
     } else {
         message <- conn$RPOP(queue)
     }

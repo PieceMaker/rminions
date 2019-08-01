@@ -173,7 +173,7 @@ useJSON = F) {
                             }
                             sendResponse(
                                 conn = conn,
-                                queue = errorQueue,
+                                queue = resultsQueue,
                                 status = 'succeeded',
                                 job = job,
                                 response = results,
