@@ -1,3 +1,10 @@
+# Update In Progress
+
+**The current state of the master branch of this project is that it contains many changes that will be in v2.0.0 of the
+rminions package. However, as this version is not yet complete this branch is very much an update (or work) in
+progress. Previous versions of this package have been tagged appropriately in this repo and a v2.0.0 tag will be
+added whenever the new version is ready.**
+
 # rminions
 
 `rminions` is a package that provides functions to assist in setting up an environment for quickly running jobs across
@@ -78,6 +85,8 @@ Once you have finished updating the IP address rules, save the file and restart 
 sudo service redis-server restart
 ```
 
+### Testing Redis
+
 To test whether you can access your new Redis server from R, open a new R session from any computer that has network
 access to Gru-svr and run the following test:
 
@@ -103,27 +112,62 @@ If the result of your `redisRPop` command was to print the list you pushed, then
 
 The core of this system is the workers. Each worker connects to a message queue and then waits until a job is ready to
 be processed. When it receives a job, it processes it and pushes the results to the provided results queue. It then
-connects back to the jobs queue and waits to receive another job to begin the cycle again. Whenever a job is started,
-the message it received is also saved in a queue unique to the worker to provide the ability to recover in the event
-that the worker goes down in the middle of processing. Recovery functionality has not been added at this time.
+connects back to the jobs queue and waits to receive another job to begin the cycle again. The recommended number of
+workers per server is the number of CPU cores or threads plus 2.
 
-To start a worker on a server, make sure the server can connect to the central Redis server. Then simply run the
-following command.
+Although you can run a worker by launching it inside of a separate R process on the worker server, it is recommended
+that you instead make use of the provided Dockerfile to build an image that will run one worker for each instance of
+the image run.
+
+## Docker
+
+This project contains a Dockerfile that will install the appropriate Debian package to run the rminions package,
+will install the R package devtools, will install the rminions package, and finally will execute a shell script
+that will start a worker. This worker looks for the environment variables `REDIS` and `QUEUE` to know what
+server to connect to and what queue to listen to. If `REDIS` is not exported, then it will default to `"localhost"`.
+Similarly, if `QUEUE` is not exported, then it will default to `"jobsQueue"`.
+
+To build the Docker image, clone this project locally and change directory into it. Then run the following:
+
+```bash
+docker build -t minion-worker .
+```
+
+This will build the image locally and tag it as "minion-worker".
+
+Since we are referring to our Redis server as Gru-svr, we need to set the environment variable appropriately:
+
+```bash
+export REDIS="Gru-svr"
+```
+
+We are now ready to run the Dockerized worker.
+
+```bash
+docker run --rm minion-worker
+```
+
+You should now have a worker running that is connected to the central Redis server and awaiting requests on the
+queue `"jobsQueue"`.
+
+## R Process
+
+To start a worker on a server via R process instead of Docker, make sure the server can connect to the central
+Redis server and that the rminions package has been installed. Then simply run the following command.
 
 ```R
 library(rminions)
 minionWorker(host = "Gru-svr")
 ```
 
-This will connect to the central Redis server and wait for jobs to be pushed to the default `jobsQueue`. This will
-block the running process so it is recommended that you background the process or create an Upstart job to begin the
-worker. The recommended number of workers per server is the number of CPU cores or threads plus 2.
+This will connect to the central Redis server and wait for jobs to be pushed to the default `"jobsQueue"`. Note this
+will block the running process.
 
 # Bundling and Pushing Jobs
 
-The first verson of the rminions package required anonymous function definitions to be passed to the worker. Even if
-you wanted to call a simple native R function, you still had to pass an anonyous function that wrapped the call to the
-R function. This was very archaic, tough to deal with, and introduced a lot of room for error. The new version of this
+The first version of the rminions package required anonymous function definitions to be passed to the worker. Even if
+you wanted to call a simple native R function, you still had to pass an anonymous function that wrapped the call to the
+R function. This was archaic, tough to deal with, and introduced a lot of room for error. The new version of this
 package scraps this and now requires any function you want a worker to run to be defined in a package.
 
 ## Job Definition
@@ -141,9 +185,12 @@ To allow minion workers to be accessed from languages other than R, they can acc
 R lists and JSON. Currently a worker can accept one or the other, not both. This choice is made by setting the `useJSON`
 flag at worker startup.
 
-If `useJSON` is false, then `parameters` should be a named list where the entries match the parameters of `func`. For
-example, if we want a worker to calculate the 0, 0.25, 0.50, 0.75, and 1 quantiles for a normal distribution with a
-mean of 100 and standard deviation of 10, the following would be passed as `parameters`:
+Suppose we want to calculate the 0, 0.25, 0.50, 0.75, and 1 quantiles for a normal distribution with a mean of 100 and
+standard deviation of 10. Then `package` would be `"stats"` and `func` would be `"qnorm"`. The parameter would depend
+on the `useJSON` flag.
+
+If `useJSON` is false, then `parameters` would be a named list where the entries match the parameters of `func`, or in
+this case `"qnorm"`.
 
 ```R
 list(
@@ -153,8 +200,8 @@ list(
 )
 ```
 
-If `useJSON` is true, then `parameters` should be a named JSON object, again where the entries match the parameters of
-`func`. The following would be the `parameters` for the previous example:
+If `useJSON` is true, then `parameters` would be a named JSON object, again where the entries match the parameters of
+`func`.
 
 ```javascript
 {
@@ -174,16 +221,16 @@ the `status` property and will have either the `results` or the `error` property
 
 ### Status
 
-`status` will be one of three strings: "succeeded", "failed", or "catastrophic".
+`status` will be one of three strings: `"succeeded"`, `"failed"`, or `"catastrophic"`.
 
 #### Succeeded
 
-If `status` is "succeeded", then the job ran successfully and the results of the function execution are stored in the
-response in the `results` key.
+If `status` is `"succeeded"`, then the job ran successfully and the results of the function execution are stored in
+the response in the `results` key.
 
 #### Failed
 
-If `status` is "failed", then either there was an error validating the job or there was an error executing the
+If `status` is `"failed"`, then either there was an error validating the job or there was an error executing the
 requested function. Refer to the `error` key of the response message for more information.
 
 #### Catastrophic
@@ -191,9 +238,48 @@ requested function. Refer to the `error` key of the response message for more in
 If `status` is "catastrophic", then an error somehow got through the first set of error handling built into the minion
 worker. See `error` key of the response message for more information. Due to their unexpected nature, jobs resulting
 in a catastrophic status will not be placed in either `resultsQueue` or `errorQueue`, but rather a special queue
-called "unhandledErrors".
+called `"unhandledErrors"`.
 
-Note, if you receive a "catastrophic" status, please open an issue as this may be indicative of a bug in the package.
+Note, if you receive a `"catastrophic"` status, please open an issue as this may be indicative of a bug in the
+package.
+
+## Send/Get Message Functions
+
+Two functions are provided to facilitate sending and fetching single messages. These are `sendMessage` and
+`getMessage`. `sendMessage` can be used to make an initial request of a worker and `getMessage` can be used to get
+the results of the request.
+
+### Example
+
+Referring back to our `"qnorm"` example above, we could make the request (using native R types) by running the
+following:
+
+```R
+redisConn <- redux::hiredis(host = 'Gru-svr')
+sendMessage(
+    conn = redisConn,
+    package = 'stats',
+    func = 'qnorm',
+    parameters = list(
+        q = c(0, 0.25, 0.5, 0.75, 1),
+        mean = 100,
+        sd = 10
+    )
+)
+```
+
+By default, `sendMessage` assumes JSON will not be used for messages and automatically serializes the request.
+Once this function is executed, the message will be pushed to the central server and the first worker in line
+will get the request and execute the function with the specified parameters. Once the execution has been
+completed, the results will be sent back on the appropriate queue. Assuming the execution was a success, the
+results can be fetched by running the following (assuming `redisConn` has not been closed):
+
+```R
+results <- getMessage(
+    conn = redisConn,
+    queue = 'resultsQueue'
+)
+```
 
 ## Helper Functions
 
@@ -206,6 +292,9 @@ inputs and return the formatted list. If you require calculations or data wrangl
 function, then you will need to write a custom job builder function and pass it in the `buildJobsList` parameter.
  
 # Steal The Moon Example
+
+**This example is for version 1.1.0 of the rminions package. For version 2.0.0 of this package, this example will be
+converted into an entirely separate repository.**
 
 An example has been included with this package. It can be run with the following code:
 
@@ -241,3 +330,7 @@ of `rredis`.
 messages.~~
 5. ~~Add docker file and make that recommended deployment method in README, instead of the Upstart method.~~
 6. Update changelog.
+  * Add removal of `BRPOPLPUSH` command in favor of `BRPOP` in worker.
+7. Convert section for testing Redis from rredis to redux.
+8. With v2.0.0 deployment, publish Docker image to hub.docker.com and then add steps to pull it down in Minion Workers
+   section.
