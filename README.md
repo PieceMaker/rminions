@@ -330,7 +330,7 @@ of `rredis`.
 messages.~~
 5. ~~Add docker file and make that recommended deployment method in README, instead of the Upstart method.~~
 6. Update changelog.
-  * Add removal of `BRPOPLPUSH` command in favor of `BRPOP` in worker.
+    * Add removal of `BRPOPLPUSH` command in favor of `BRPOP` in worker.
 7. Convert section for testing Redis from rredis to redux.
 8. With v2.0.0 deployment, publish Docker image to hub.docker.com and then add steps to pull it down in Minion Workers
    section.
