@@ -194,7 +194,7 @@ this case `"qnorm"`.
 
 ```R
 list(
-    q = c(0, 0.25, 0.5, 0.75, 1),
+    p = c(0, 0.25, 0.5, 0.75, 1),
     mean = 100,
     sd = 10
 )
@@ -205,7 +205,7 @@ If `useJSON` is true, then `parameters` would be a named JSON object, again wher
 
 ```javascript
 {
-    "q": [0, 0.25, 0.5, 0.75, 1],
+    "p": [0, 0.25, 0.5, 0.75, 1],
     "mean": 100,
     "sd": 10
 }
