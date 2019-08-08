@@ -39,3 +39,14 @@ test_that('JSON messages that are pulled from the queue are appropriately deseri
     result
   )
 })
+
+test_that('error is thrown when no messages are in queue', {
+  skipIfNoRedis()
+  reduxConn <- testReduxConnection()
+  cleanQueue(reduxConn, 'emptyQueue')
+
+  expect_error(
+    getMessage(conn = reduxConn, queue = 'emptyQueue'),
+    'No message found in queue'
+  )
+})
