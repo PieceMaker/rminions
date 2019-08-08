@@ -20,6 +20,9 @@ getMessage <- function(conn, queue, useJSON = F, blocking = F) {
     } else {
         message <- conn$RPOP(queue)
     }
+    if(is.null(message)) {
+        stop('No message found in queue')
+    }
     if(useJSON) {
         message <- jsonlite::fromJSON(message)
     } else {
