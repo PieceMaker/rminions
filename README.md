@@ -293,30 +293,9 @@ function, then you will need to write a custom job builder function and pass it 
  
 # Steal The Moon Example
 
-**This example is for version 1.1.0 of the rminions package. For version 2.0.0 of this package, this example will be
-converted into an entirely separate repository.**
-
-An example has been included with this package. It can be run with the following code:
-
-```R
-library(rminions)
-source('./buildMoonSimJobsList.R')
-source('./stealTheMoonSim.R')
-
-alplyQueueJobs(
-    host = 'Gru-svr',
-    iter = c(1:10000),
-    margins = 1,
-    func = stealTheMoonSim,
-    buildJobsList = buildMoonSimJobsList,
-    resultsQueue = 'stealTheMoonSim',
-    errorQueue = 'stealTheMoonSimErrors'
-)
-```
-
-In this example, `buildMoonSimJobsList` generates distributional parameters and returns the job lists that
-`alplyQueueJobs` will queue. The workers then pick up these jobs and execute `stealTheMoonSim` with the parameters
-generated in `buildMoonSimJobsList`.
+This example has moved to the [steal-the-moon](https://github.com/PieceMaker/steal-the-moon) project. It shows how
+to extend the Dockerfile built in this repository to add a new custom package and then start a worker that can then
+run the new functions.
 
 # TODO
 
