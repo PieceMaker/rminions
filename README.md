@@ -91,22 +91,20 @@ To test whether you can access your new Redis server from R, open a new R sessio
 access to Gru-svr and run the following test:
 
 ```R
-library(rredis)
-conn <- redisConnect("Gru-svr", returnRef = T)
-redisRPush("testKey", list(x = 1, y = 2))
-# [1] "1"
-# attr(,"redis string value")
-# TRUE
-redisRPop("testKey")
+library(redux)
+conn <- hiredis(host = 'Gru-svr')
+conn$RPUSH("testKey", object_to_bin(list(x = 1, y = 2)))
+# [1] 1
+result <- conn$RPOP('testKey')
+bin_to_object(result)
 # $x
 # [1] 1
 #
 # $y
 # [1] 2
-redisClose(conn)
 ```
 
-If the result of your `redisRPop` command was to print the list you pushed, then your server is now working.
+If the result of your `bin_to_object(result)` command was to print the list you pushed, then your server is now working.
 
 # Minion Workers
 
@@ -211,8 +209,9 @@ If `useJSON` is true, then `parameters` would be a named JSON object, again wher
 }
 ```
 
-Due to the serialization that rredis performs when pushing to and popping from queues, R data types can be passed in
-the `parameters` list when `useJSON` is false, but only string and numeric types can be used when `useJSON` is true.
+Due to the serialization made available via `redux::object_to_bin` and `redux::bin_to_object`, R data types can be
+passed in the `parameters` list when `useJSON` is false, but only string and numeric types can be used when `useJSON`
+is true.
 
 ## Results Messages
 
@@ -280,16 +279,6 @@ results <- getMessage(
     queue = 'resultsQueue'
 )
 ```
-
-## Helper Functions
-
-Since this package was developed to satisfy a need to replicate jobs numerous times, several helper functions have been
-provided to assist in quickly pushing multiple jobs to a queue. These are the `*lplyQueueJobs` functions, where `*` is
-`a`, `d`, and `l`. These functions accept an object to be iterated over, the function for the worker to execute, the
-parameters it needs to run, and the response and error queue. These functions also accept a function used to build the
-job message in the above list format. By default they call a default builder function whose only task is to accept the
-inputs and return the formatted list. If you require calculations or data wrangling to arrive at the inputs to your
-function, then you will need to write a custom job builder function and pass it in the `buildJobsList` parameter.
  
 # Steal The Moon Example
 
@@ -302,14 +291,15 @@ run the new functions.
 These are things that need to be completed for v2.0.0.
 
 1. ~~Convert `minionWorker` to execute functions from packages rather than execute arbitrary function definitions.~~
-2. The `rredis` package is deprecated. Convert to a newer package such as `redux`, which is recommended by the creator
-of `rredis`.
+2. ~~The `rredis` package is deprecated. Convert to a newer package such as `redux`, which is recommended by the creator
+of `rredis`.~~
 3. Update documentation.
 4. ~~Figure out how to make redis serialization optional so it will be easier for non-R clients to send and receive
 messages.~~
 5. ~~Add docker file and make that recommended deployment method in README, instead of the Upstart method.~~
 6. Update changelog.
     * Add removal of `BRPOPLPUSH` command in favor of `BRPOP` in worker.
-7. Convert section for testing Redis from rredis to redux.
+7. ~~Convert section for testing Redis from rredis to redux.~~
 8. With v2.0.0 deployment, publish Docker image to hub.docker.com and then add steps to pull it down in Minion Workers
    section.
+9. ~~Remove `*lplyQueueJobs` helper functions.~~

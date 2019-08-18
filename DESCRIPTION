@@ -14,7 +14,6 @@ Imports:
     plyr (>= 1.8.3),
     Rbunyan (>= 1.0.0),
     redux (>= 1.1.0),
-    rredis (>= 1.7.0),
     R.utils (>= 2.2.0)
 Remotes:
     PieceMaker/Rbunyan
