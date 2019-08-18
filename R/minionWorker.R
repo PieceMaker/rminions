@@ -36,7 +36,7 @@
 #' \code{errorQueue} will be a string with the name of the redis queue to store any errors
 #' thrown while running the job. If not specified, it will default to \code{resultsQueue}.
 #'
-#' @import plyr rredis R.utils Rbunyan jsonlite
+#' @import plyr R.utils Rbunyan jsonlite
 #'
 #' @export
 #'
