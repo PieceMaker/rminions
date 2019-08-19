@@ -14,8 +14,6 @@
 #'
 #' @import redux jsonlite
 #'
-#' @export
-#'
 #' @param conn An open redux hiredis connection.
 #' @param queue A string giving the name of the queue where the response will be sent.
 #' @param status One of the following strings: "succeeded", "failed", or "catastrophic".
@@ -37,5 +35,5 @@ sendResponse <- function(conn, queue, status = c('succeeded', 'failed', 'catastr
     } else {
         job <- redux::object_to_bin(job)
     }
-    conn$RPUSH(queue, job)
+    conn$LPUSH(queue, job)
 }

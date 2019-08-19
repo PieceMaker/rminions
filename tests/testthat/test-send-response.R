@@ -21,7 +21,7 @@ test_that('success responses can be sent and are of appropriate structure using 
 
     cleanQueue(reduxConn, 'testThatQueue')
 
-    sendResponse(
+    rminions:::sendResponse(
         reduxConn,
         'testThatQueue',
         'succeeded',
@@ -45,7 +45,7 @@ test_that('failure responses can be sent and are of appropriate structure using 
 
     cleanQueue(reduxConn, 'testThatQueue')
 
-    sendResponse(
+    rminions:::sendResponse(
         reduxConn,
         'testThatQueue',
         'failed',
@@ -69,7 +69,7 @@ test_that('unhandled error responses can be sent and are of appropriate structur
 
     cleanQueue(reduxConn, 'testThatQueue')
 
-    sendResponse(
+    rminions:::sendResponse(
         reduxConn,
         'testThatQueue',
         'catastrophic',
@@ -93,7 +93,7 @@ test_that('success responses can be sent and are of appropriate structure using 
 
     cleanQueue(reduxConn, 'testThatQueue')
 
-    sendResponse(
+    rminions:::sendResponse(
         reduxConn,
         'testThatQueue',
         'succeeded',
@@ -120,7 +120,7 @@ test_that('failure responses can be sent and are of appropriate structure using 
 
     cleanQueue(reduxConn, 'testThatQueue')
 
-    sendResponse(
+    rminions:::sendResponse(
         reduxConn,
         'testThatQueue',
         'failed',
@@ -147,7 +147,7 @@ test_that('unhandled error responses can be sent and are of appropriate structur
 
     cleanQueue(reduxConn, 'testThatQueue')
 
-    sendResponse(
+    rminions:::sendResponse(
         reduxConn,
         'testThatQueue',
         'catastrophic',

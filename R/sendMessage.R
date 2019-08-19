@@ -55,5 +55,5 @@ sendMessage <- function(conn, jobsQueue = "jobsQueue", package, func, parameters
     } else {
         job <- redux::object_to_bin(job)
     }
-    conn$RPUSH(jobsQueue, job)
+    conn$LPUSH(jobsQueue, job)
 }
