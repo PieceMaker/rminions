@@ -213,6 +213,9 @@ Due to the serialization made available via `redux::object_to_bin` and `redux::b
 passed in the `parameters` list when `useJSON` is false, but only string and numeric types can be used when `useJSON`
 is true.
 
+Note a helper function, `sendMessage`, has been included in this package that will automatically construct a request
+based on the inputs. It is recommended you use this function when making requests in R.
+
 ## Results Messages
 
 Results messages will have all of the properties that were passed in the original job definition. They will also have
@@ -259,11 +262,9 @@ sendMessage(
     conn = redisConn,
     package = 'stats',
     func = 'qnorm',
-    parameters = list(
-        q = c(0, 0.25, 0.5, 0.75, 1),
-        mean = 100,
-        sd = 10
-    )
+    p = c(0, 0.25, 0.5, 0.75, 1),
+    mean = 100,
+    sd = 10
 )
 ```
 
