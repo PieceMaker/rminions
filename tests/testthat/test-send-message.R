@@ -24,11 +24,9 @@ test_that('messages can be sent and are of appropriate structure using internal 
     jobsQueue = 'testThatQueue',
     package = 'myPackage',
     func = 'myFunction',
-    parameters = list(
-      x = 1,
-      y = 'string',
-      z = T
-    ),
+    x = 1,
+    y = 'string',
+    z = T,
     resultsQueue = 'myResultsQueue',
     errorQueue = 'myErrorQueue',
     useJSON = F
@@ -52,11 +50,9 @@ test_that('messages can be sent and are of appropriate structure using JSON', {
     jobsQueue = 'testThatQueue',
     package = 'myPackage',
     func = 'myFunction',
-    parameters = list(
-      x = 1,
-      y = 'string',
-      z = T
-    ),
+    x = 1,
+    y = 'string',
+    z = T,
     resultsQueue = 'myResultsQueue',
     errorQueue = 'myErrorQueue',
     useJSON = T

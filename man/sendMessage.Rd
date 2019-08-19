@@ -4,7 +4,7 @@
 \alias{sendMessage}
 \title{A function that takes the required information for a job and sends it to the queue.}
 \usage{
-sendMessage(conn, jobsQueue = "jobsQueue", package, func, parameters,
+sendMessage(conn, jobsQueue = "jobsQueue", package, func, ...,
   resultsQueue = "resultsQueue", errorQueue = "errorQueue",
   useJSON = F)
 }
@@ -18,7 +18,7 @@ Defaults to \code{jobsqueue}.}
 
 \item{func}{The name of the function in \code{package} to execute.}
 
-\item{parameters}{A named list of all parameters to be passed to \code{func}.}
+\item{...}{All parameters to be passed to \code{func}.}
 
 \item{resultsQueue}{A string giving the name of the queue to send results to. Defaults to "resultsQueue".}
 

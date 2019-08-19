@@ -33,7 +33,7 @@
 #'   Defaults to \code{jobsqueue}.
 #' @param package A string giving the name of the package containing the function to execute.
 #' @param func The name of the function in \code{package} to execute.
-#' @param parameters A named list of all parameters to be passed to \code{func}.
+#' @param ... All parameters to be passed to \code{func}.
 #' @param resultsQueue A string giving the name of the queue to send results to. Defaults to "resultsQueue".
 #' @param errorQueue A string giving the name of the queue to send errors to. Defaults to "errorQueue".
 #' @param useJSON Flag specifying whether jobs and results will be sent in JSON format. Defaults to false
@@ -41,12 +41,12 @@
 #    to true and make sure jobs are defined in the JSON format and the function being executed does not require
 #    any R-specific objects. Need to make sure this flag matches the one \code{minionWorker} was started with.
 
-sendMessage <- function(conn, jobsQueue = "jobsQueue", package, func, parameters, resultsQueue = "resultsQueue",
+sendMessage <- function(conn, jobsQueue = "jobsQueue", package, func, ..., resultsQueue = "resultsQueue",
     errorQueue = "errorQueue", useJSON = F) {
     job <- list(
         package = package,
         func = func,
-        parameters = parameters,
+        parameters = list(...),
         resultsQueue = resultsQueue,
         errorQueue = errorQueue
     )
