@@ -29,10 +29,21 @@ devtools::install_github("PieceMaker/rminions")
 
 A Docker Compose file has been provided in this repository that will automatically start Redis and workers. It assumes
 the the Dockerfile in this repository has been built and tagged as `rminion`. To start a single instance of the server
-and 4 workers, simply run the following:
+and 4 workers, change to the directory the `docker-compose.yaml` is located and simply run the following:
 
 ```bash
 docker-compose up -d --scale redis=1 --scale worker=4
+```
+
+It should output the following:
+
+```bash
+Creating network "rminions_default" with the default driver
+Creating rminions_redis_1 ... done
+Creating rminions_worker_1 ... done
+Creating rminions_worker_2 ... done
+Creating rminions_worker_3 ... done
+Creating rminions_worker_4 ... done
 ```
 
 The `-d` flag will ensure all instances are run in the background and the `--scale` options tell docker-compose how
