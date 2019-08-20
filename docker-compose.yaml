@@ -1,0 +1,13 @@
+version: '3'
+services:
+  worker:
+    image: rminion:latest
+    environment:
+      - REDIS=redis
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:latest
+    ports:
+      - "6379:6379"
