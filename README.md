@@ -25,6 +25,21 @@ From here you can install the `rminions` package directly from GitHub.
 devtools::install_github("PieceMaker/rminions")
 ```
 
+## Quickstart
+
+A Docker Compose file has been provided in this repository that will automatically start Redis and workers. It assumes
+the the Dockerfile in this repository has been built and tagged as `rminion`. To start a single instance of the server
+and 4 workers, simply run the following:
+
+```bash
+docker-compose up -d --scale redis=1 --scale worker=4
+```
+
+The `-d` flag will ensure all instances are run in the background and the `--scale` options tell docker-compose how
+many of each service to run. The redis service exposes port 6379 so others can connect to the same instance.
+
+You can now test the workers by running the example in [Message Functions](#message-functions).
+
 ## Central Server Setup
 
 The central server must have a working [Redis](http://redis.io/) server running that has the ability to accept incoming
@@ -245,7 +260,7 @@ called `"unhandledErrors"`.
 Note, if you receive a `"catastrophic"` status, please open an issue as this may be indicative of a bug in the
 package.
 
-## Send/Get Message Functions
+## Message Functions
 
 Two functions are provided to facilitate sending and fetching single messages. These are `sendMessage` and
 `getMessage`. `sendMessage` can be used to make an initial request of a worker and `getMessage` can be used to get
