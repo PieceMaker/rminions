@@ -51,6 +51,12 @@ many of each service to run. The redis service exposes port 6379 so others can c
 
 You can now test the workers by running the example in [Message Functions](#message-functions).
 
+To stop the workers, simply run in the same directory
+
+```bash
+docker-compose down
+```
+
 ## Central Server Setup
 
 The central server must have a working [Redis](http://redis.io/) server running that has the ability to accept incoming
