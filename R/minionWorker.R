@@ -36,8 +36,6 @@
 #' \code{errorQueue} will be a string with the name of the redis queue to store any errors
 #' thrown while running the job. If not specified, it will default to \code{resultsQueue}.
 #'
-#' @import plyr R.utils Rbunyan jsonlite
-#'
 #' @export
 #'
 #' @param host The name or ip address of the redis server.
@@ -143,6 +141,21 @@ useJSON = F) {
                         status = 'failed',
                         job = job,
                         response = '"params" not provided.',
+                        useJSON = useJSON
+                    )
+                } else if(func %in% blacklist()[[package]]) {
+                    errorMessage <- sprintf(
+                        'Function "%s" in package "%s" disallowed',
+                        func,
+                        package
+                    )
+                    Rbunyan::bunyanLog.error(errorMessage)
+                    sendResponse(
+                        conn = conn,
+                        queue = errorQueue,
+                        status = 'failed',
+                        job = job,
+                        response = errorMessage,
                         useJSON = useJSON
                     )
                 } else {

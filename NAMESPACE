@@ -3,8 +3,5 @@
 export(getMessage)
 export(minionWorker)
 export(sendMessage)
-import(R.utils)
-import(Rbunyan)
 import(jsonlite)
-import(plyr)
 import(redux)
