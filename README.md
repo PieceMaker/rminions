@@ -277,6 +277,37 @@ called `"unhandledErrors"`.
 Note, if you receive a `"catastrophic"` status, please open an issue as this may be indicative of a bug in the
 package.
 
+## Blacklist and Whitelist
+
+By default, `rminions` implements a blacklist to try to block functions that can pose a security threat. This
+list is stored in the internal function `blacklist`. The function `minionWorker` also allows you to configure
+a whitelist which is recommended. If a whitelist is implemented, then the blacklist will be ignored.
+
+A whitelist can be configured in two ways: defining a list or specifying the path to a JSON file. A whitelist
+should contain package names as the keys and arrays (or vectors) of strings giving the names of the functions
+in the given package that are being allowed. If a whitelist is configured and a request is made for a function
+that is not in the whitelist, then the request will be rejected.
+
+### Example
+
+The following is an R list whitelist:
+
+```R
+list(
+    stealTheMoon = "simulateTrip",
+    stats = c("dnorm", "pnorm", "qnorm", "rnorm")
+)
+```
+
+The following is the equivalent whitelist defined using JSON:
+
+```JSON
+{
+    "stealTheMoon": ["simulateTrip"],
+    "stats": ["dnorm", "pnorm", "qnorm", "rnorm"]
+}
+```
+
 ## Message Functions
 
 Two functions are provided to facilitate sending and fetching single messages. These are `sendMessage` and
