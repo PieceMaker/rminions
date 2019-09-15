@@ -50,12 +50,16 @@
 #'   if you want logs to be written to a file. If a directory is specified, then logs will be
 #'   saved in that directory to a file with name \code{<host>-worker-<pid>.log}.
 #' @param useJSON Flag specifying whether jobs and results will be sent in JSON format. Defaults to false
-#    so R-specific objects are preserved in transit. If sending jobs from languages other than R, set useJSON
-#    to true and make sure jobs are defined in the JSON format and the function being executed does not require
-#    any R-specific objects.
+#'    so R-specific objects are preserved in transit. If sending jobs from languages other than R, set useJSON
+#'    to true and make sure jobs are defined in the JSON format and the function being executed does not require
+#'    any R-specific objects.
+#' @param whitelist String of list. If a list, it defines the whitelist using the same format as
+#'    the blacklist. If a string, then it gives the path to a JSON file that defines the whitelist. If a
+#'    whitelist is defined, then a function will only be allowed if it is in the specified list. Note that
+#'    the whitelist takes precedent over the blacklist.
 
 minionWorker <- function(host, port = 6379, jobsQueue = "jobsQueue", logLevel = 'DEBUG', logFileDir = "stdout",
-useJSON = F) {
+useJSON = F, whitelist = NULL) {
     workerHost <- as.character(R.utils::System$getHostname())
     workerID <- paste0(workerHost, '-worker-', Sys.getpid())
     if(logFileDir == 'stdout') {
@@ -90,6 +94,10 @@ useJSON = F) {
         )
     }
     conn <- redux::hiredis(host = host, port = port)
+    
+    if(is.character(whitelist)) {
+        whitelist <- jsonlite::read_json(whitelist, simplifyVector = T)
+    }
 
     while(1) {
         tryCatch(
@@ -143,9 +151,26 @@ useJSON = F) {
                         response = '"params" not provided.',
                         useJSON = useJSON
                     )
-                } else if(func %in% blacklist()[[package]]) {
+                } else if(!is.null(whitelist) && !(func %in% whitelist[[package]])) {
+                    # If the whitelist is defined and the function is not in the whitelist
                     errorMessage <- sprintf(
-                        'Function "%s" in package "%s" disallowed',
+                        'Function "%s" in package "%s" disallowed by whitelist',
+                        func,
+                        package
+                    )
+                    Rbunyan::bunyanLog.error(errorMessage)
+                    sendResponse(
+                        conn = conn,
+                        queue = errorQueue,
+                        status = 'failed',
+                        job = job,
+                        response = errorMessage,
+                        useJSON = useJSON
+                    )
+                } else if(func %in% blacklist()[[package]] && !(func %in% whitelist[[package]])) {
+                    # If the function is in the blacklist and the whitelist did not override it
+                    errorMessage <- sprintf(
+                        'Function "%s" in package "%s" disallowed by blacklist',
                         func,
                         package
                     )

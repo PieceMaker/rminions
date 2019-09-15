@@ -5,7 +5,8 @@
 \title{A function that watches a message queue and starts working a job when one is available.}
 \usage{
 minionWorker(host, port = 6379, jobsQueue = "jobsQueue",
-  logLevel = "DEBUG", logFileDir = "stdout", useJSON = F)
+  logLevel = "DEBUG", logFileDir = "stdout", useJSON = F,
+  whitelist = NULL)
 }
 \arguments{
 \item{host}{The name or ip address of the redis server.}
@@ -24,7 +25,15 @@ enabled. Defaults to \code{stdout} which outputs logs to standard out. Specify d
 if you want logs to be written to a file. If a directory is specified, then logs will be
 saved in that directory to a file with name \code{<host>-worker-<pid>.log}.}
 
-\item{useJSON}{Flag specifying whether jobs and results will be sent in JSON format. Defaults to false}
+\item{useJSON}{Flag specifying whether jobs and results will be sent in JSON format. Defaults to false
+so R-specific objects are preserved in transit. If sending jobs from languages other than R, set useJSON
+to true and make sure jobs are defined in the JSON format and the function being executed does not require
+any R-specific objects.}
+
+\item{whitelist}{String of list. If a list, it defines the whitelist using the same format as
+the blacklist. If a string, then it gives the path to a JSON file that defines the whitelist. If a
+whitelist is defined, then a function will only be allowed if it is in the specified list. Note that
+the whitelist takes precedent over the blacklist.}
 }
 \description{
 \code{minionWorker} is a blocking function that will completely block the R instance
