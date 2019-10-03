@@ -232,7 +232,10 @@ useJSON = F, whitelist = NULL) {
                                 queue = errorQueue,
                                 status = 'failed',
                                 job = job,
-                                response = e,
+                                response = list(
+                                    message = e$message,
+                                    call = e$call
+                                ),
                                 useJSON = useJSON
                             )
                         },
