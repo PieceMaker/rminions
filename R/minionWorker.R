@@ -223,8 +223,8 @@ useJSON = F, whitelist = NULL) {
                                 sprintf(
                                     'An error occurred while executing "%s::%s": %s',
                                     package,
-                                    func,
-                                    e
+                                    job$func,
+                                    e$message
                                 )
                             )
                             sendResponse(
@@ -246,7 +246,7 @@ useJSON = F, whitelist = NULL) {
                 Rbunyan::bunyanLog.error(
                     sprintf(
                         "An unhandled error occurred while executing R function: %s",
-                        e
+                        e$message
                     )
                 )
                 if(is.list(job)) {
@@ -260,7 +260,10 @@ useJSON = F, whitelist = NULL) {
                         queue = errorQueue,
                         status = 'catastrophic',
                         job = job,
-                        response = e,
+                        response = list(
+                            message = e$message,
+                            call = e$call
+                        ),
                         useJSON = useJSON
                     )
                 } else {
@@ -269,7 +272,10 @@ useJSON = F, whitelist = NULL) {
                         queue = 'unhandledErrors',
                         status = 'catastrophic',
                         job = list(),
-                        response = e,
+                        response = list(
+                            message = e$message,
+                            call = e$call
+                        ),
                         useJSON = useJSON
                     )
                 }
