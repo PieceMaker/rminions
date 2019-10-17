@@ -153,9 +153,10 @@ the image run.
 
 This project contains a Dockerfile that will install the appropriate Debian package to run the rminions package,
 will install the R package devtools, will install the rminions package, and finally will execute a shell script
-that will start a worker. This worker looks for the environment variables `REDIS` and `QUEUE` to know what
-server to connect to and what queue to listen to. If `REDIS` is not exported, then it will default to `"localhost"`.
-Similarly, if `QUEUE` is not exported, then it will default to `"jobsQueue"`.
+that will start a worker. This worker looks for the environment variables `REDIS`, `PORT`, `QUEUE`, and `USEJSON`
+to know what server to connect to and what queue to listen to. If `REDIS` is not exported, then it will default to
+`"localhost"`. Similarly, if `QUEUE` is not exported, then it will default to `"jobsQueue"`. Finally, `USEJSON`
+is either the string "true" or "false".
 
 To build the Docker image, clone this project locally and change directory into it. Then run the following:
 
