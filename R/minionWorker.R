@@ -234,7 +234,7 @@ useJSON = F, whitelist = NULL) {
                                 job = job,
                                 response = list(
                                     message = e$message,
-                                    call = e$call
+                                    call = paste0(deparse(e$call), collapse = '')
                                 ),
                                 useJSON = useJSON
                             )
@@ -265,7 +265,7 @@ useJSON = F, whitelist = NULL) {
                         job = job,
                         response = list(
                             message = e$message,
-                            call = e$call
+                            call = paste0(deparse(e$call), collapse = '')
                         ),
                         useJSON = useJSON
                     )
@@ -277,7 +277,7 @@ useJSON = F, whitelist = NULL) {
                         job = list(),
                         response = list(
                             message = e$message,
-                            call = e$call
+                            call = paste0(deparse(e$call), collapse = '')
                         ),
                         useJSON = useJSON
                     )

@@ -1,2 +1,2 @@
 #!/bin/bash
-r -e "library(rminions); minionWorker(host = \"$REDIS\", jobsQueue = \"$QUEUE\");"
+r -e "library(rminions); minionWorker(host = \"$REDIS\", port = $PORT, jobsQueue = \"$QUEUE\", useJSON = as.logical(tolower(\"$USEJSON\")));"

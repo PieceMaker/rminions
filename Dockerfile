@@ -3,6 +3,8 @@ MAINTAINER Jonathan Adams <jd.adams16@gmail.com>
 
 ENV REDIS "localhost"
 ENV QUEUE "jobsQueue"
+ENV PORT 6379
+ENV USEJSON "false"
 
 RUN apt-get update \
     && apt-get install -y \
@@ -16,11 +18,12 @@ RUN apt-get update \
 
 RUN mkdir -p /R/rminions
 COPY . /R/rminions
-COPY ./runMinion.sh /R
 
 RUN r -e 'install.packages("devtools")' \
     && r -e 'devtools::install("/R/rminions")' \
-    && chmod +x /R/runMinion.sh \
     && rm -rf /R/rminions
+
+COPY ./runMinion.sh /R
+RUN chmod +x /R/runMinion.sh
 
 CMD [ "/R/runMinion.sh" ]
