@@ -11,7 +11,7 @@ result <- list(
 )
 sentBinary <- redux::object_to_bin(result)
 sentJSON <- as.character(
-  jsonlite::toJSON(result)
+  jsonlite::toJSON(result, auto_unbox = T, digits = NA)
 )
 
 test_that('binary messages that are pulled from the queue are appropriately deserialized and returned to the user', {

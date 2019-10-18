@@ -51,7 +51,7 @@ sendMessage <- function(conn, jobsQueue = "jobsQueue", package, func, ..., resul
         errorQueue = errorQueue
     )
     if(useJSON) {
-        job <- jsonlite::toJSON(job, auto_unbox = T)
+        job <- jsonlite::toJSON(job, auto_unbox = T, digits = NA)
     } else {
         job <- redux::object_to_bin(job)
     }
