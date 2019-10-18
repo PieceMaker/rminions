@@ -197,7 +197,7 @@ useJSON = F, whitelist = NULL) {
                                     sprintf(
                                         "Sending results to queue %s: %s",
                                         resultsQueue,
-                                        jsonlite::toJSON(debugJob)
+                                        jsonlite::toJSON(debugJob, auto_unbox = T, digits = NA)
                                     )
                                 )
                             } else {
