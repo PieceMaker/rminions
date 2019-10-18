@@ -10,7 +10,7 @@ resultList <- list(
   errorQueue = 'myErrorQueue'
 )
 resultJSON <- as.character(
-  jsonlite::toJSON(resultList)
+  jsonlite::toJSON(resultList, auto_unbox = T)
 )
 
 test_that('messages can be sent and are of appropriate structure using internal serialization', {
