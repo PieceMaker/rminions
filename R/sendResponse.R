@@ -31,7 +31,7 @@ sendResponse <- function(conn, queue, status = c('succeeded', 'failed', 'catastr
         job$error <- response
     }
     if(useJSON) {
-        job <- jsonlite::toJSON(job, auto_unbox = T)
+        job <- jsonlite::toJSON(job, auto_unbox = T, digits = NA)
     } else {
         job <- redux::object_to_bin(job)
     }

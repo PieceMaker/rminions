@@ -105,7 +105,7 @@ test_that('success responses can be sent and are of appropriate structure using 
     expectedResponse$status <- 'succeeded'
     expectedResponse$results <- result
     expectedResponse <- as.character(
-        jsonlite::toJSON(expectedResponse, auto_unbox = T)
+        jsonlite::toJSON(expectedResponse, auto_unbox = T, digits = NA)
     )
     jsonMessage <- reduxConn$RPOP('testThatQueue')
     expect_identical(
@@ -132,7 +132,7 @@ test_that('failure responses can be sent and are of appropriate structure using 
     expectedResponse$status <- 'failed'
     expectedResponse$error <- result
     expectedResponse <- as.character(
-        jsonlite::toJSON(expectedResponse, auto_unbox = T)
+        jsonlite::toJSON(expectedResponse, auto_unbox = T, digits = NA)
     )
     jsonMessage <- reduxConn$RPOP('testThatQueue')
     expect_identical(
@@ -159,7 +159,7 @@ test_that('unhandled error responses can be sent and are of appropriate structur
     expectedResponse$status <- 'catastrophic'
     expectedResponse$error <- result
     expectedResponse <- as.character(
-        jsonlite::toJSON(expectedResponse, auto_unbox = T)
+        jsonlite::toJSON(expectedResponse, auto_unbox = T, digits = NA)
     )
     jsonMessage <- reduxConn$RPOP('testThatQueue')
     expect_identical(
