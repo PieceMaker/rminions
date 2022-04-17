@@ -16,10 +16,11 @@
             <div class="slides">
                 <!--Slide 1-->
                 <section>
-                    <h3>Grid Computing in R </h3>
-                    <h4>with Redis Message Queues</h4>
+                    <h3>RaaS: Distributed Computing in R</h3>
+                    <h3>Using Redis</h3>
                     <p>Jonathan Adams</p>
-                    <p>R in Insurance 2016</p>
+                    <p>Dublin Data Science</p>
+                    <p>April 2022</p>
                 </section>
 
                 <!--Slide 2-->
@@ -28,151 +29,176 @@
                     <!--Slide 2.1-->
                     <section>
                         <ul>
+                            <li>Work in US crop insurance industry</li>
+                            <li>Crop insurance is niche property and casualty (P&C) line of business</li>
+                            <li>Actuarial and statistical models differ from classical P&C</li>
                             <li>
-                                Common for me to run lots of jobs in R
+                                Provides unique modeling challenges
                                 <ul>
-                                    <li>Fitting complex models</li>
-                                    <li>Running simulations from a CAT model</li>
-                                    <li>Numerical integration of posterior distributions</li>
+                                    <li>Fund designation: combines vast amount of insured-specific and general data</li>
+                                    <li>Insured data: yield history, farming practices, location, soil composition</li>
+                                    <li>General data: commodity prices, weather</li>
                                 </ul>
                             </li>
                         </ul>
                     </section>
+
                     <!--Slide 2.2-->
                     <section>
                         <ul>
-                            <li>First used <code>snow</code> package.</li>
+                            <li>US crop insurance is socialized program</li>
+                            <li>Every crop insurer charges exact same rates on majority of products</li>
                             <li>
-                                Worked as follows:
-                                <ol>
-                                    <li>Bundle code into function</li>
-                                    <li>Create cluster of worker nodes</li>
-                                    <li>Spread your jobs among the nodes before processing</li>
-                                    <li>Wait for it to finish or throw an error</li>
-                                </ol>
+                                Compete with service and software
+                                <ul>
+                                    <li>Service: live support, friendly underwriters, fast claims</li>
+                                    <li>Software: little downtime, robust during peak reporting times</li>
+                                </ul>
                             </li>
-                        </ul>
-                    </section>
-                    <!--Slide 2.3-->
-                    <section>
-                        <ul>
-                            <li>Pros</li>
-                            <ul>
-                                <li>Run multiple jobs simultaneously</li>
-                                <li>Multiple methods of cluster creation</li>
-                                <li>Could load-balance some clusters</li>
-                            </ul>
-                            <li>Cons</li>
-                            <ul>
-                                <li>Not all cluster could be load-balanced</li>
-                                <li>Common to be waiting  for one or two nodes to finish</li>
-                                <li>Poorly handled errors could cause loss of all work</li>
-                                <li>Reproducing errors was complicated</li>
-                                <li>Results not available until all processing finished</li>
-                                <li>Could not increase size of cluster mid-processing</li>
-                            </ul>
                         </ul>
                     </section>
                 </section>
 
                 <!--Slide 3-->
                 <section>
-                    <h3>Ways to Improve</h3>
-                    <ul>
-                        <li>Allow quick scaling up and down</li>
-                        <li>Use any number of servers</li>
-                        <li>Automatically load-balance</li>
-                        <li>Access results as they are available</li>
-                        <li>Separate errors for easy access and reproducibility</li>
-                    </ul>
+                    <h3>Microservices & Message Queues</h3>
+                    <!--Slide 3.1-->
+                    <section>
+                        <ul>
+                            <li>
+                                Microservices are small, specialized services
+                                <ul>
+                                    <li>Billing</li>
+                                    <li>Claims</li>
+                                    <li>Reports</li>
+                                    <li>Why not R?</li>
+                                </ul>
+                            </li>
+                            <li>Communication happens via message queues</li>
+                            <li>Messages stored in central server</li>
+                            <li>Worked on first-come-first-served basis</li>
+                            <li>Allows for seamless scaling and automatic load balancing</li>
+                        </ul>
+                    </section>
                 </section>
 
                 <!--Slide 4-->
                 <section>
                     <h3>Redis</h3>
-                    <ul>
-                        <li>Redis is an in-memory NoSQL database</li>
-                        <li>All objects are strings</li>
-                        <li>
-                            Allows clients to wait for messages to be available
-                            <ul>
-                                <li>Messages are queued and clients are
-                                    <br>first-come-first-served
-                                </li>
-                                <li>Pop from and push to queues just like an array</li>
-                            </ul>
-                        </li>
-                        <li>
-                            Bindings made available in R through <code>rredis</code> package
-                            <ul>
-                                <li>Stores any R object by serializing</li>
-                            </ul>
-                        </li>
-                    </ul>
+                    <!--Slide 4.1-->
+                    <section>
+                        <ul>
+                            <li>Redis used as central queuing server</li>
+                            <li>Redis is an in-memory NoSQL database</li>
+                            <li>All objects are strings</li>
+                            <li>
+                                Allows clients to wait for messages to be available
+                                <ul>
+                                    <li>Messages are queued and clients are first-come-first-served</li>
+                                    <li>Pop from and push to queues just like an array</li>
+                                </ul>
+                            </li>
+                            <li>
+                                Bindings made available in R through <code>redux</code> package
+                                <ul>
+                                    <li><code>redux::object_to_bin</code> and <code>redux::bin_to_object</code></li>
+                                    allow R objects to be serialized and stored in Redis
+                                </ul>
+                            </li>
+                        </ul>
+                    </section>
                 </section>
 
                 <!--Slide 5-->
-                <section>
-                    <h3>Message Format</h3>
-                    <ul>
-                        <li>
-                            Messages will be lists with the following keys:
-                            <ul>
-                                <li>Function - A function definition with one argument, <code>params</code></li>
-                                <li>Parameters - A list of all parameters needed to execute the function</li>
-                                <li>ResultsQueue - Name of the queue to store results in</li>
-                                <li>ErrorQueue - Name of the queue to store errors in</li>
-                            </ul>
-                        </li>
-                    </ul>
-                </section>
-
-                <!--Slide 6-->
                 <section data-transition="fade-in">
                     <h3>Flowchart</h3>
                     <img src="./images/twoMinionsDiagram.png" height="550">
                 </section>
 
-                <!--Slide 7-->
+                <!--Slide 6-->
                 <section data-transition="fade-in">
                     <h3>Flowchart</h3>
                     <img src="./images/threeMinionsDiagram.png" height="550">
                 </section>
 
-                <!--Slide 8-->
-                <section data-transition="fade-in">
-                    <h3>Runtime</h3>
-                    <img src="./images/runtimes.png" height = "550" width = "730">
-                </section>
-
-                <!--Slide 9-->
+                <!--Slide 7-->
                 <section>
-                    <h3>Conclusion</h3>
-                    <!--Slide 9.1-->
+                    <h3>rminions</h3>
                     <section>
                         <ul>
                             <li>
-                                Improvements revisited
+                                A package providing functions for building and communicating with R microservices
+                                via Redis
+                            </li>
+                            <li>Serves any function available in a locally-installed package</li>
+                            <li>
+                                Native functions typically reside in packages <code>base</code> and
+                                <code>stats</code>
                                 <ul>
-                                    <li>Allow quick scaling up and down</li>
-                                    <li>Use any number of servers</li>
-                                    <li>Automatically load-balance</li>
-                                    <li>Access results as they are available</li>
-                                    <li>Separate errors for easy access and reproducibility</li>
+                                    <li>Package: <code>base</code>, function <code>seq</code></li>
+                                    <li>Package: <code>stats</code>, function <code>pnorm</code></li>
+                                </ul>
+                            </li>
+                            <li>
+                                Start service by simply running <code>minionWorker</code>
+                                <ul>
+                                    <li><code>minionWorker(host, port, jobsQueue, useJSON, whitelist)</code></li>
                                 </ul>
                             </li>
                         </ul>
                     </section>
-                    <!--Slide 9.2-->
                     <section>
                         <ul>
-                            <li>Available on GitHub <a href="https://github.com/PieceMaker/rminions">https://github.com/PieceMaker/rminions</a></li>
-                            <li>Easily deployed in the cloud via Docker</li>
-                            <li>Can communicate with all servers via PUB/SUB</li>
-                            <li>Can update worker to accept requests from other languages</li>
-                            <li>Similar package: <code>doRedis</code></li>
+                            <li>Contains default blacklist, but whitelist recommended</li>
+                            <li>
+                                Messages require 4 parameters: <code>package</code>, <code>func</code>,
+                                <code>parameters</code>, and <code>resultsQueue</code>
+                                <ul>
+                                    <li>Optional <code>errorQueue</code> to separate errors, if desired</li>
+                                    <li>Package contains helpers</li>
+                                    <li>Messages manual if accessing from other languages</li>
+                                </ul>
+                            </li>
                         </ul>
                     </section>
+                </section>
+
+                <!--Slide 8-->
+                <section>
+                    <h3>Docker</h3>
+                    <section>
+                        <ul>
+                            <li>Docker provides a way of running code in a container</li>
+                            <li>Allows for quick deployment</li>
+                            <li>
+                                Image with <code>rminions</code> already installed available at
+                                <a href="https://hub.docker.com/r/piecemaker/rminion">
+                                    https://hub.docker.com/r/piecemaker/rminion
+                                </a>
+                            </li>
+                            <li>Recommended you extend Docker image and install all necessary packages</li>
+                        </ul>
+                    </section>
+                </section>
+
+                <!--Slide 9-->
+                <section>
+                    <h3>Examples</h3>
+                </section>
+
+                <!--Slide 10-->
+                <section>
+                    <h3>Thank You</h3>
+                    <ul>
+                        <li><a href="https://github.com/PieceMaker">https://github.com/PieceMaker</a></li>
+                        <li><a href="https://blog.rebelactuary.io/">https://blog.rebelactuary.io/</a></li>
+                        <li>
+                            <a href="https://www.linkedin.com/in/jdadams16/">
+                                https://www.linkedin.com/in/jdadams16/
+                            </a>
+                        </li>
+                        <li><a href="https://twitter.com/RebelActuary">https://twitter.com/RebelActuary</a></li>
+                    </ul>
                 </section>
             </div>
         </div>
